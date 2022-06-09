@@ -23,3 +23,5 @@ temp/
 /manifest/
 /resource/
 /utility/
+/main.go
+/Makefile
