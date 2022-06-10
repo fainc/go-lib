@@ -28,7 +28,7 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 		return
 	}
 	if err != nil {
-		if code == gcode.CodeNil || code == gcode.CodeInternalError { // 服务器错误
+		if code == gcode.CodeInternalError { // 服务器错误
 			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
 		}
