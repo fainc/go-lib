@@ -19,24 +19,24 @@ func Json() *json {
 	return &jsonVar
 }
 
-func (rec *json) Success(ctx context.Context, data interface{}) (res *CustomRes, err error) {
-	return rec.Writer(ctx, data, "success", 200, 200, nil)
+func (rec *json) Success(ctx context.Context, data interface{}) {
+	rec.Writer(ctx, data, "success", 200, 200, nil)
 }
 
-func (rec *json) Error(ctx context.Context, message interface{}) (res *CustomRes, err error) {
-	return rec.Writer(ctx, nil, message, 400, 400, nil)
+func (rec *json) Error(ctx context.Context, message interface{}) {
+	rec.Writer(ctx, nil, message, 400, 400, nil)
 }
 
-func (rec *json) ServerError(ctx context.Context, message interface{}) (res *CustomRes, err error) {
-	return rec.Writer(ctx, nil, message, 500, 500, nil)
+func (rec *json) ServerError(ctx context.Context, message interface{}) {
+	rec.Writer(ctx, nil, message, 500, 500, nil)
 }
 
-func (rec *json) Authorization(ctx context.Context, message interface{}) (res *CustomRes, err error) {
-	return rec.Writer(ctx, nil, message, 401, 401, nil)
+func (rec *json) Authorization(ctx context.Context, message interface{}) {
+	rec.Writer(ctx, nil, message, 401, 401, nil)
 }
 
-func (rec *json) NotFound(ctx context.Context, message interface{}) (res *CustomRes, err error) {
-	return rec.Writer(ctx, nil, message, 404, 404, nil)
+func (rec *json) NotFound(ctx context.Context, message interface{}) {
+	rec.Writer(ctx, nil, message, 404, 404, nil)
 }
 
 type JsonFormat struct {
@@ -50,7 +50,7 @@ type JsonFormat struct {
 }
 
 // Writer 数据输出
-func (rec *json) Writer(ctx context.Context, data interface{}, message interface{}, status int, code int, ext interface{}) (res *CustomRes, err error) {
+func (rec *json) Writer(ctx context.Context, data interface{}, message interface{}, status int, code int, ext interface{}) {
 	r := g.RequestFromCtx(ctx) // 从Ctx中获取Request对象
 	r.Response.WriteStatus(status)
 	r.Response.ClearBuffer()

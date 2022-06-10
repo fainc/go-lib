@@ -13,13 +13,13 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 		err = r.GetError()
 		res = r.GetHandlerResponse()
 	)
-	// There's custom buffer content, it then exits current handler.
+	// 已有自定义输出内容，不作处理
 	if r.Response.BufferLength() > 0 && gmeta.Get(res, "mime").String() == "custom" {
 		return
 	}
-	if err != nil {
-		_, _ = Json().Error(ctx, err.Error())
+	if err != nil { // 有错误信息
+		Json().Error(ctx, err.Error())
 		return
 	}
-	_, _ = Json().Success(ctx, res)
+	Json().Success(ctx, res)
 }
