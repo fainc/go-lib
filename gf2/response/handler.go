@@ -1,6 +1,10 @@
 package response
 
 import (
+	"net/http"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
@@ -9,17 +13,43 @@ import (
 func MiddlewareHandlerResponse(r *ghttp.Request) {
 	r.Middleware.Next()
 	var (
-		ctx = r.Context()
-		err = r.GetError()
-		res = r.GetHandlerResponse()
+		ctx  = r.Context()
+		err  = r.GetError()
+		res  = r.GetHandlerResponse()
+		code = gerror.Code(err)
 	)
+	// api.json 不作处理
+	if r.RequestURI == "/api.json" {
+		return
+	}
 	// 已有自定义输出内容，不作处理
 	if r.Response.BufferLength() > 0 && gmeta.Get(res, "mime").String() == "custom" {
 		return
 	}
-	if err != nil { // 有错误信息
-		Json().Error(ctx, err.Error())
+	if err != nil {
+		if code == gcode.CodeNil || code == gcode.CodeInternalError { // 服务器错误
+			Json().ServerError(ctx, "InternalError")
+			return
+		}
+		if code == gcode.CodeNotAuthorized { // 登录
+			Json().Authorization(ctx, "Authorization", err.Error())
+			return
+		}
+		Json().Error(ctx, err.Error()) // 常规错误
 		return
+	}
+	if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
+		switch r.Response.Status {
+		case http.StatusNotFound:
+			Json().NotFound(ctx, "URIResourceNotFound")
+			return
+		case http.StatusForbidden:
+			Json().Authorization(ctx, "Authorization", nil)
+			return
+		default:
+			Json().ServerError(ctx, "InternalError")
+			return
+		}
 	}
 	Json().Success(ctx, res)
 }

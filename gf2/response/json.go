@@ -7,6 +7,7 @@ import (
 
 	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 )
@@ -20,22 +21,22 @@ func Json() *json {
 }
 
 func (rec *json) Success(ctx context.Context, data interface{}) {
-	rec.Writer(ctx, data, "success", 200, 200, nil)
+	rec.Writer(ctx, data, "RequestSuccess", 200, 200, nil)
 }
 
-func (rec *json) Error(ctx context.Context, message interface{}) {
+func (rec *json) Error(ctx context.Context, message string) {
 	rec.Writer(ctx, nil, message, 400, 400, nil)
 }
 
-func (rec *json) ServerError(ctx context.Context, message interface{}) {
+func (rec *json) ServerError(ctx context.Context, message string) {
 	rec.Writer(ctx, nil, message, 500, 500, nil)
 }
 
-func (rec *json) Authorization(ctx context.Context, message interface{}) {
-	rec.Writer(ctx, nil, message, 401, 401, nil)
+func (rec *json) Authorization(ctx context.Context, message string, ext interface{}) {
+	rec.Writer(ctx, nil, message, 401, 401, ext)
 }
 
-func (rec *json) NotFound(ctx context.Context, message interface{}) {
+func (rec *json) NotFound(ctx context.Context, message string) {
 	rec.Writer(ctx, nil, message, 404, 404, nil)
 }
 
@@ -50,14 +51,16 @@ type JsonFormat struct {
 }
 
 // Writer 数据输出
-func (rec *json) Writer(ctx context.Context, data interface{}, message interface{}, status int, code int, ext interface{}) {
-	r := g.RequestFromCtx(ctx) // 从Ctx中获取Request对象
+func (rec *json) Writer(ctx context.Context, data interface{}, message string, status int, code int, ext interface{}) {
+	i18n := gi18n.New()
+	message = i18n.Tf(ctx, message) // 读取i18n（若有）todo 修复已经过转换的数据无需再次转换问题（如数据校验模块转换后的message）
+	r := g.RequestFromCtx(ctx)      // 从Ctx中获取Request对象
 	r.Response.WriteStatus(status)
 	r.Response.ClearBuffer()
 	r.Response.Header().Set("Content-Type", "application/json;charset=utf-8")
 	serverName, _ := os.Hostname()
 	serverName, _ = gmd5.Encrypt(serverName)
-	_ = r.Response.WriteXml(JsonFormat{
+	_ = r.Response.WriteJson(JsonFormat{
 		Code:    code,
 		Message: message,
 		Data:    data,
@@ -66,5 +69,4 @@ func (rec *json) Writer(ctx context.Context, data interface{}, message interface
 		Ext:     ext,
 		Runtime: gtime.Now().TimestampMilli() - r.EnterTime,
 	})
-	return
 }
