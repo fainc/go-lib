@@ -5,6 +5,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/util/gmeta"
 )
@@ -28,11 +29,11 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 	}
 	if err != nil {
 		if code == gcode.CodeNil || code == gcode.CodeInternalError { // 服务器错误
-			Json().ServerError(ctx, "InternalError")
+			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
 		}
 		if code == gcode.CodeNotAuthorized { // 登录
-			Json().Authorization(ctx, "Authorization", err.Error())
+			Json().Authorization(ctx, g.I18n().Translate(ctx, "Authorization"), err.Error())
 			return
 		}
 		Json().Error(ctx, err.Error()) // 常规错误
@@ -41,13 +42,13 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 	if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
 		switch r.Response.Status {
 		case http.StatusNotFound:
-			Json().NotFound(ctx, "URIResourceNotFound")
+			Json().NotFound(ctx, g.I18n().Translate(ctx, "URIResourceNotFound"))
 			return
 		case http.StatusForbidden:
-			Json().Authorization(ctx, "Authorization", nil)
+			Json().Authorization(ctx, g.I18n().Translate(ctx, "Authorization"), nil)
 			return
 		default:
-			Json().ServerError(ctx, "InternalError")
+			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
 		}
 	}
