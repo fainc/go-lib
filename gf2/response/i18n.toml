@@ -1,5 +1,5 @@
 #response i18n中文定义，如需使用请复制到您的gf i18n配置中
-NotFound = "请求的资源无效"
+NotFound = "请求的资源不存在"
 Authorization = "请先登录"
 InternalError = "内部服务器错误"
 
