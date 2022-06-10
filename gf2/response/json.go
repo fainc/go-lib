@@ -20,7 +20,7 @@ func Json() *json {
 }
 
 func (rec *json) Success(ctx context.Context, data interface{}) {
-	rec.Writer(ctx, data, g.I18n().Translate(ctx, "RequestSuccess"), 200, 200, nil)
+	rec.Writer(ctx, data, "success", 200, 200, nil)
 }
 
 func (rec *json) Error(ctx context.Context, message string) {
