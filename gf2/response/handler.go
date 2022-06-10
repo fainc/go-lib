@@ -42,7 +42,7 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 	if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
 		switch r.Response.Status {
 		case http.StatusNotFound:
-			Json().NotFound(ctx, g.I18n().Translate(ctx, "URIResourceNotFound"))
+			Json().NotFound(ctx, g.I18n().Translate(ctx, "NotFound"))
 			return
 		case http.StatusForbidden:
 			Json().Authorization(ctx, g.I18n().Translate(ctx, "Authorization"), nil)
