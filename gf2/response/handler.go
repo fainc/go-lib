@@ -3,7 +3,6 @@ package response
 import (
 	"net/http"
 
-	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -19,6 +18,7 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 		res  = r.GetHandlerResponse()
 		code = gerror.Code(err)
 	)
+	g.Dump(code.Code())
 	// api.json 不作处理
 	if r.RequestURI == "/api.json" {
 		return
@@ -28,24 +28,21 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 		return
 	}
 	if err != nil {
-		if code == gcode.CodeInternalError { // 服务器错误
+		if code.Code() == 50 { // 服务器错误
 			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
 		}
-		if code == gcode.CodeNotAuthorized { // 登录
-			Json().Authorization(ctx, g.I18n().Translate(ctx, "Authorization"), err.Error())
+		if code.Code() == 401 { // 登录
+			Json().Authorization(ctx, code.Message(), code.Detail())
 			return
 		}
-		Json().Error(ctx, err.Error()) // 常规错误
+		Json().Error(ctx, err.Error(), code.Code(), code.Detail()) // 常规错误
 		return
 	}
 	if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
 		switch r.Response.Status {
 		case http.StatusNotFound:
 			Json().NotFound(ctx, g.I18n().Translate(ctx, "NotFound"))
-			return
-		case http.StatusForbidden:
-			Json().Authorization(ctx, g.I18n().Translate(ctx, "Authorization"), nil)
 			return
 		default:
 			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
