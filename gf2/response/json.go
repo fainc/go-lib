@@ -37,7 +37,7 @@ func (rec *json) Authorization(ctx context.Context, message string, ext interfac
 }
 
 func (rec *json) NotFound(ctx context.Context, message string) {
-	rec.Writer(ctx, nil, message, 404, 404, 401, nil)
+	rec.Writer(ctx, nil, message, 404, 404, 404, nil)
 }
 
 type JsonFormat struct {
@@ -47,16 +47,21 @@ type JsonFormat struct {
 	Data       interface{} `json:"data"`       // 返回数据
 	TraceId    interface{} `json:"traceId"`    // 请求唯一追踪ID
 	Server     string      `json:"server"`     // 服务端 host name md5 值
-	Runtime    int64       `json:"runtime"`    // 执行时长（ms）
+	Runtime    int64       `json:"runtime"`    // 当前任务执行耗时（ms）
 	Lang       string      `json:"lang"`       // 当前上下文语言
 	Ext        interface{} `json:"ext"`        // 拓展数据（可能含有多个错误详情或其他附加数据，例：复杂登录场景下的401错误返回具体登录地址）
 	ApiVersion interface{} `json:"apiVersion"` // 当前程序运行版本号
+	BootTime   int64       `json:"bootTime"`   // 系统启动时长（s）（使用时间戳差值而不是time.sub进行计算，time.sub受系统单调时钟策略影响，部分系统如mac休眠后单调时钟会停止，导致计算产生偏差）
+	BootAt     string      `json:"bootAt"`     // 系统启动时间（应用启动时初始化）
 }
 
 // Writer 数据输出
 func (rec *json) Writer(ctx context.Context, data interface{}, message string, status int, code int, errCode int, ext interface{}) {
 	r := g.RequestFromCtx(ctx) // 从Ctx中获取Request对象
 	l := gi18n.LanguageFromCtx(ctx)
+	if l == "" {
+		l = "UNKNOWN"
+	}
 	v := r.GetCtxVar("API_VERSION", "UNKNOWN")
 	r.Response.WriteStatus(status)
 	r.Response.ClearBuffer()
@@ -73,6 +78,8 @@ func (rec *json) Writer(ctx context.Context, data interface{}, message string, s
 		ErrorCode:  errCode,
 		Runtime:    gtime.Now().TimestampMilli() - r.EnterTime,
 		ApiVersion: v,
+		BootTime:   GetBootTime(),
+		BootAt:     GetBootAt(),
 	})
 	r.Response.Header().Set("Content-Type", "application/json;charset=utf-8")
 }

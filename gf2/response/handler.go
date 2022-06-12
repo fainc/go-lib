@@ -9,16 +9,14 @@ import (
 	"github.com/gogf/gf/v2/util/gmeta"
 )
 
-// MiddlewareHandlerResponse 默认数据返回中间件
-func MiddlewareHandlerResponse(r *ghttp.Request) {
-	r.Middleware.Next()
+// HandlerResponse 默认数据返回中间件
+func HandlerResponse(r *ghttp.Request) {
 	var (
 		ctx  = r.Context()
 		err  = r.GetError()
 		res  = r.GetHandlerResponse()
 		code = gerror.Code(err)
 	)
-	g.Dump(code.Code())
 	// api.json 不作处理
 	if r.RequestURI == "/api.json" {
 		return
