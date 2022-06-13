@@ -45,7 +45,7 @@ type JsonFormat struct {
 	ErrorCode  int         `json:"errorCode"`  // 错误码，用于业务判断（可选），0/400/401/404/500/other，通常忽略该值，除非业务需要判断详细错误类型（例：交易场景，交易失败返回400业务码时，返回余额不足、账户冻结等详细错误码用于后续业务处理）
 	Message    interface{} `json:"message"`    // 消息，业务码非400时固定输出 Success/Authorization/NotFound/InternalError中的一种，400时输出详细错误（可能含i18n转译，建议仅展示或记录信息，不可用于业务判断）
 	Data       interface{} `json:"data"`       // 返回数据
-	TraceId    interface{} `json:"traceId"`    // 请求唯一追踪ID
+	TraceId    interface{} `json:"traceId"`    // 请求唯一追踪ID,用于日志定位
 	Server     string      `json:"server"`     // 服务端 host name md5 值
 	Runtime    int64       `json:"runtime"`    // 当前任务执行耗时（ms）
 	Lang       string      `json:"lang"`       // 当前上下文语言
