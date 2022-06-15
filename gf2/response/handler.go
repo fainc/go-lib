@@ -26,7 +26,7 @@ func HandlerResponse(r *ghttp.Request) {
 		return
 	}
 	if err != nil {
-		if code.Code() == 50 { // 服务器错误
+		if code.Code() == 50 || code.Code() == 52 { // 服务器错误
 			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
 		}
