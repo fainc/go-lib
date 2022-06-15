@@ -42,7 +42,7 @@ func (rec *json) NotFound(ctx context.Context, message string) {
 
 type JsonFormat struct {
 	Code       int         `json:"code"`       // 业务码，用于业务判断（首选），固定 200/400/401/404/500，与http状态码同步，通常取该值判断是否有错误需要处理
-	ErrorCode  int         `json:"errorCode"`  // 错误码，用于业务判断（可选），0/400/401/404/500/other，通常忽略该值，除非业务需要判断详细错误类型（例：交易场景，交易失败返回400业务码时，返回余额不足、账户冻结等详细错误码用于后续业务处理）
+	ErrorCode  int         `json:"errorCode"`  // 错误码，用于业务判断（可选），-1/400(通用错误)/51(参数验证错误)/401/404/500/other，通常忽略该值，除非业务需要判断详细错误类型（例：交易场景，交易失败返回400业务码时，返回余额不足、账户冻结等详细错误码用于后续业务处理）
 	Message    interface{} `json:"message"`    // 消息，业务码非400时固定输出 Success/Authorization/NotFound/InternalError中的一种，400时输出详细错误（可能含i18n转译，建议仅展示或记录信息，不可用于业务判断）
 	Data       interface{} `json:"data"`       // 返回数据
 	TraceId    interface{} `json:"traceId"`    // 请求唯一追踪ID,用于日志定位
