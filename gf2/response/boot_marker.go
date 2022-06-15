@@ -10,6 +10,9 @@ func BootMark() {
 	BootAt = gtime.Now()
 }
 func GetBootTime() int64 {
+	if BootAt == nil {
+		return -1
+	}
 	return gtime.Now().Timestamp() - BootAt.Timestamp()
 }
 func GetBootAt() string {
