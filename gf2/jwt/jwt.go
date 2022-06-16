@@ -8,6 +8,7 @@ import (
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -91,4 +92,41 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, _ := token.SignedString([]byte(params.Secret))
 	return tokenString, nil
+}
+
+// StandardAuth 通用验证
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, whiteTables g.SliceStr, catch bool, secret string) error {
+	whiteTable := garray.NewStrArrayFrom(whiteTables)
+	uuid, scopeKey, err := rec.Parse(ParseParams{
+		Token:  r.GetHeader("Authorization"),
+		Scopes: scopes,
+		Secret: secret,
+	})
+	if err != nil {
+		if !whiteTable.ContainsI(r.RequestURI) && catch {
+			return err
+		} else {
+			r.SetCtxVar("UUID", 0)
+			r.SetCtxVar("SCOPE", "UNKNOWN")
+		}
+	} else {
+		r.SetCtxVar("UUID", uuid)
+		r.SetCtxVar("SCOPE", scopeKey)
+	}
+	return nil
+}
+
+type user struct {
+	UUID  int
+	SCOPE string
+}
+
+// GetUser 获取当前用户信息
+func (*jwtHelper) GetUser(r *ghttp.Request) *user {
+	UUID := r.GetCtxVar("UUID", 0)
+	SCOPE := r.GetCtxVar("SCOPE", "UNKNOWN")
+	return &user{
+		UUID:  gconv.Int(UUID),
+		SCOPE: gconv.String(SCOPE),
+	}
 }
