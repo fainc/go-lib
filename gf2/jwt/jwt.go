@@ -94,8 +94,8 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 	return tokenString, nil
 }
 
-// StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发) catch决定是否返回err，不catch写入空用户信息到ctx，并且不返回err
-func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, whiteTables g.SliceStr, catch bool, secret string) error {
+// StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发)
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, whiteTables g.SliceStr, secret string) error {
 	whiteTable := garray.NewStrArrayFrom(whiteTables)
 	uuid, scopeKey, err := rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
@@ -103,7 +103,7 @@ func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, whiteTab
 		Secret: secret,
 	})
 	if err != nil {
-		if !whiteTable.ContainsI(r.RequestURI) && catch {
+		if !whiteTable.ContainsI(r.RequestURI) {
 			return err
 		} else {
 			r.SetCtxVar("UUID", 0)
