@@ -42,6 +42,8 @@ func HandlerResponse(r *ghttp.Request) {
 		case http.StatusNotFound:
 			Json().NotFound(ctx, g.I18n().Translate(ctx, "NotFound"))
 			return
+		case http.StatusUnauthorized:
+			return
 		default:
 			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
