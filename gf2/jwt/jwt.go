@@ -95,7 +95,7 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 }
 
 // StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发)
-func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, whiteTables g.SliceStr, secret string) error {
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, whiteTables g.SliceStr, secret string) (int, string, error) {
 	whiteTable := garray.NewStrArrayFrom(whiteTables)
 	uuid, scopeKey, err := rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
@@ -104,16 +104,15 @@ func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, whiteTab
 	})
 	if err != nil {
 		if !whiteTable.ContainsI(r.RequestURI) {
-			return err
-		} else {
-			r.SetCtxVar("UUID", 0)
-			r.SetCtxVar("SCOPE", "UNKNOWN")
+			return 0, "UNKNOWN", err
 		}
-	} else {
-		r.SetCtxVar("UUID", uuid)
-		r.SetCtxVar("SCOPE", scopeKey)
+		r.SetCtxVar("UUID", 0)
+		r.SetCtxVar("SCOPE", "UNKNOWN")
+		return 0, "UNKNOWN", nil
 	}
-	return nil
+	r.SetCtxVar("UUID", uuid)
+	r.SetCtxVar("SCOPE", scopeKey)
+	return uuid, scopeKey, nil
 }
 
 type user struct {
