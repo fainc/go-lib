@@ -82,4 +82,7 @@ func (rec *json) Writer(ctx context.Context, data interface{}, message string, s
 		BootAt:     GetBootAt(),
 	})
 	r.Response.Header().Set("Content-Type", "application/json;charset=utf-8")
+	if status == 401 {
+		r.ExitAll()
+	}
 }
