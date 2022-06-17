@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -121,7 +122,8 @@ type user struct {
 }
 
 // GetUser 获取当前用户信息
-func (*jwtHelper) GetUser(r *ghttp.Request) *user {
+func (*jwtHelper) GetUser(ctx context.Context) *user {
+	r := g.RequestFromCtx(ctx) // 从Ctx中获取Request对象
 	UUID := r.GetCtxVar("UUID", 0)
 	SCOPE := r.GetCtxVar("SCOPE", "UNKNOWN")
 	return &user{
