@@ -58,11 +58,6 @@ type JsonFormat struct {
 // Writer 数据输出
 func (rec *json) Writer(ctx context.Context, data interface{}, message string, status int, code int, errCode int, ext interface{}) {
 	r := g.RequestFromCtx(ctx) // 从Ctx中获取Request对象
-	l := gi18n.LanguageFromCtx(ctx)
-	if l == "" {
-		l = "UNKNOWN"
-	}
-	v := r.GetCtxVar("API_VERSION", "UNKNOWN")
 	r.Response.WriteStatus(status)
 	r.Response.ClearBuffer()
 	serverName, _ := os.Hostname()
@@ -74,10 +69,10 @@ func (rec *json) Writer(ctx context.Context, data interface{}, message string, s
 		TraceId:    gctx.CtxId(ctx),
 		Server:     strings.ToUpper(serverName),
 		Ext:        ext,
-		Lang:       l,
+		Lang:       gi18n.LanguageFromCtx(ctx),
 		ErrorCode:  errCode,
 		Runtime:    gtime.Now().TimestampMilli() - r.EnterTime,
-		ApiVersion: v,
+		ApiVersion: r.GetCtxVar("API_VERSION", "UNKNOWN"),
 		BootTime:   GetBootTime(),
 		BootAt:     GetBootAt(),
 	})
