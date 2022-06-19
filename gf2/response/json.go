@@ -57,7 +57,7 @@ type JsonFormat struct {
 
 // Writer 数据输出
 func (rec *json) Writer(ctx context.Context, data interface{}, message string, status int, code int, errCode int, ext interface{}) {
-	r := g.RequestFromCtx(ctx) // 从Ctx中获取Request对象
+	r := g.RequestFromCtx(ctx)
 	r.Response.WriteStatus(status)
 	r.Response.ClearBuffer()
 	serverName, _ := os.Hostname()
