@@ -213,6 +213,7 @@ type WxACodeParams struct {
 	} `json:"line_color,omitempty"`
 	IsHyaLine bool `json:"is_hyaline,omitempty"`
 }
+
 type WxACodeResp struct {
 	WxCommonResp
 	ContentType string      `json:"contentType"`

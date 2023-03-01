@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/redis/go-redis/v9"
 )
@@ -22,7 +21,8 @@ var cacheEngine = "memory"
 var redisCacheClient *redis.Client
 var memoryCacheClient *gcache.Cache
 
-// InitRedisCacheClient 全局初始化Redis缓存（仅需启动时初始化一次,后续初始化返回首次配置），未初始化redis默认使用memory配置
+// InitRedisCacheClient 全局初始化Redis缓存（仅需启动时初始化一次,后续初始化返回首次配置），未初始化redis或初始化失败默认使用memory配置
+// redisConf : redis://<user>:<pass>@localhost:6379/<db>
 func (rec *cache) InitRedisCacheClient(redisConf string) (*redis.Client, error) {
 	if redisCacheClient != nil {
 		return redisCacheClient, nil
@@ -32,6 +32,11 @@ func (rec *cache) InitRedisCacheClient(redisConf string) (*redis.Client, error) 
 		return nil, err
 	}
 	redisCacheClient = redis.NewClient(opt)
+	err = redisCacheClient.Get(context.Background(), "test_init_connect").Err()
+	if err != nil && err != redis.Nil {
+		err = errors.New("redis初始化失败：" + err.Error())
+		return nil, err
+	}
 	cacheEngine = "redis"
 	return redisCacheClient, nil
 }
@@ -63,7 +68,16 @@ func (rec *cache) GetRedisCache(prefix string, id string) (token string, err err
 	if err != nil {
 		return
 	}
-	token = rdb.Get(context.Background(), prefix+"_"+id).String()
+	res := rdb.Get(context.Background(), prefix+"_"+id)
+	if res.Err() != nil && res.Err() != redis.Nil {
+		err = errors.New(res.Err().Error())
+		return
+	}
+	if res.Err() == redis.Nil {
+		token = ""
+		return
+	}
+	token, err = res.Result()
 	return
 }
 
@@ -73,7 +87,10 @@ func (rec *cache) SetRedisCache(prefix string, id string, value string, timeout 
 		return
 	}
 	cmd := rdb.SetEx(context.Background(), prefix+"_"+id, value, time.Duration(timeout)*time.Second)
-	g.Dump(cmd.Result())
+	_, err = cmd.Result()
+	if err != nil {
+		return err
+	}
 	return
 }
 
