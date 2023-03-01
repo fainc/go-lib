@@ -31,12 +31,13 @@ func (rec *cache) InitRedisCacheClient(redisConf string) (*redis.Client, error) 
 	if err != nil {
 		return nil, err
 	}
-	redisCacheClient = redis.NewClient(opt)
-	err = redisCacheClient.Get(context.Background(), "test_init_connect").Err()
+	rcc := redis.NewClient(opt)
+	err = rcc.Get(context.Background(), "test_init_connect").Err()
 	if err != nil && err != redis.Nil {
-		err = errors.New("redis初始化失败：" + err.Error())
+		err = errors.New("redis init failed：" + err.Error())
 		return nil, err
 	}
+	redisCacheClient = rcc
 	cacheEngine = "redis"
 	return redisCacheClient, nil
 }
@@ -63,21 +64,21 @@ func (rec *cache) GetEngine() string {
 	return cacheEngine
 }
 
-func (rec *cache) GetRedisCache(prefix string, id string) (token string, err error) {
+func (rec *cache) GetRedisCache(prefix string, id string) (value string, err error) {
 	rdb, err := rec.getRedisCacheClient()
 	if err != nil {
 		return
 	}
 	res := rdb.Get(context.Background(), prefix+"_"+id)
 	if res.Err() != nil && res.Err() != redis.Nil {
-		err = errors.New(res.Err().Error())
+		err = errors.New("redis connect error：" + res.Err().Error())
 		return
 	}
 	if res.Err() == redis.Nil {
-		token = ""
+		value = ""
 		return
 	}
-	token, err = res.Result()
+	value, err = res.Result()
 	return
 }
 
