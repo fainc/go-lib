@@ -27,6 +27,5 @@ temp/
 /main
 /main.go
 /Makefile
-/README.MD
 /logs/
 /test/
