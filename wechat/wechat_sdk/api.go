@@ -170,16 +170,12 @@ func (rec *api) GetPaidUnionId(access string, p *GetPaidUnionIdParams) (res *Pai
 	return
 }
 
+// UserPhoneNumberResp 为减少Unmarshal错误的可能性，仅保留最小字段PurePhoneNumber、CountryCode，PhoneNumber和watermark忽略
 type UserPhoneNumberResp struct {
 	WxCommonResp
 	PhoneInfo struct {
-		PhoneNumber     string `json:"phoneNumber"`
 		PurePhoneNumber string `json:"purePhoneNumber"`
-		CountryCode     int    `json:"countryCode"`
-		Watermark       struct {
-			Timestamp int    `json:"timestamp"`
-			AppId     string `json:"appid"`
-		} `json:"watermark"`
+		CountryCode     string `json:"countryCode"`
 	} `json:"phone_info"`
 }
 
@@ -195,39 +191,262 @@ func (rec *api) GetUserPhoneNumber(access string, code string) (res *UserPhoneNu
 		err = errors.New(res.ErrMsg)
 		return
 	}
-	if res.PhoneInfo.PhoneNumber == "" {
+	if res.PhoneInfo.PurePhoneNumber == "" {
 		err = errors.New("获取用户手机号信息失败")
 		return
 	}
 	return
 }
 
+type LineCodeParams struct {
+	R string `json:"r"`
+	G string `json:"g"`
+	B string `json:"b"`
+}
 type WxACodeParams struct {
-	Path      string `json:"path"`
-	Width     int    `json:"width,omitempty"`
-	AutoColor bool   `json:"auto_color,omitempty"`
-	LineCode  struct {
-		R string `json:"r"`
-		G string `json:"g"`
-		B string `json:"b"`
-	} `json:"line_color,omitempty"`
-	IsHyaLine bool `json:"is_hyaline,omitempty"`
+	Path      string          `json:"path"`
+	Width     int             `json:"width,omitempty"`
+	AutoColor bool            `json:"auto_color,omitempty"`
+	LineCode  *LineCodeParams `json:"line_color,omitempty"`
+	IsHyaLine bool            `json:"is_hyaline,omitempty"`
 }
 
-type WxACodeResp struct {
-	WxCommonResp
-	ContentType string      `json:"contentType"`
-	Buffer      interface{} `json:"buffer"`
-}
-
-func (rec *api) GetWxACode(access string, params *WxACodeParams) (res *WxACodeResp, err error) {
+func (rec *api) DownloadWxACode(access string, params *WxACodeParams, downloadPath string) (err error) {
+	res := &WxCommonResp{}
 	url := "https://api.weixin.qq.com/wxa/getwxacode?access_token=" + access
+	err = Request().PostAndDownloadCode(url, params, &res, downloadPath)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	return
+}
+
+type WxACodeUnLimitParams struct {
+	Scene      string          `json:"scene"`
+	Page       string          `json:"page,omitempty"`
+	CheckPath  bool            `json:"check_path"`
+	EnvVersion string          `json:"env_version,omitempty"`
+	Width      int             `json:"width,omitempty"`
+	AutoColor  bool            `json:"auto_color,omitempty"`
+	LineCode   *LineCodeParams `json:"line_color,omitempty"`
+	IsHyaLine  bool            `json:"is_hyaline,omitempty"`
+}
+
+func (rec *api) DownloadWxACodeUnLimit(access string, params *WxACodeUnLimitParams, downloadPath string) (err error) {
+	res := &WxCommonResp{}
+	url := "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" + access
+	err = Request().PostAndDownloadCode(url, params, &res, downloadPath)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	return
+}
+
+type WxAQrCodeParams struct {
+	Path  string `json:"path"`
+	Width int    `json:"width,omitempty"`
+}
+
+func (rec *api) DownloadWxAQrCode(access string, params *WxAQrCodeParams, downloadPath string) (err error) {
+	res := &WxCommonResp{}
+	url := "https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=" + access
+	err = Request().PostAndDownloadCode(url, params, &res, downloadPath)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	return
+}
+
+type JumpWxaParams struct {
+	Path       string `json:"path"`
+	Query      string `json:"query"`
+	EnvVersion string `json:"env_version"`
+}
+
+type GenerateSchemeParams struct {
+	JumpWxa        *JumpWxaParams `json:"jump_wxa,omitempty"`
+	IsExpire       bool           `json:"is_expire,omitempty"`
+	ExpireTime     int            `json:"expire_time,omitempty"`
+	ExpireType     int            `json:"expire_type,omitempty"`
+	ExpireInterval int            `json:"expire_interval,omitempty"`
+}
+
+type GenerateSchemeResp struct {
+	WxCommonResp
+	OpenLink string `json:"openLink"`
+}
+
+func (rec *api) GenerateScheme(access string, params *GenerateSchemeParams) (res *GenerateSchemeResp, err error) {
+	url := "https://api.weixin.qq.com/wxa/generatescheme?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
 		return
 	}
 	if res.ErrCode != 0 {
 		err = errors.New(res.ErrMsg)
+		return
+	}
+	if res.OpenLink == "" {
+		err = errors.New("生成Scheme失败")
+		return
+	}
+	return
+}
+
+type GenerateNFCSchemeParams struct {
+	JumpWxa *JumpWxaParams `json:"jump_wxa,omitempty"`
+	ModelId string         `json:"model_id"`
+	Sn      string         `json:"sn,omitempty"`
+}
+
+func (rec *api) GenerateNFCScheme(access string, params *GenerateNFCSchemeParams) (res *GenerateSchemeResp, err error) {
+	url := "https://api.weixin.qq.com/wxa/generatenfcscheme?access_token=" + access
+	err = Request().Post(url, params, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	if res.OpenLink == "" {
+		err = errors.New("生成Scheme失败")
+		return
+	}
+	return
+}
+
+type QuerySchemeParams struct {
+	Scheme string `json:"scheme"`
+}
+type QuerySchemeResp struct {
+	WxCommonResp
+	SchemeInfo struct {
+		AppId      string `json:"appid"`
+		Path       string `json:"path"`
+		Query      string `json:"query"`
+		CreateTime int    `json:"create_time"`
+		ExpireTime int    `json:"expire_time"`
+		EnvVersion string `json:"env_version"`
+	} `json:"scheme_info"`
+	VisitOpenId string `json:"visit_openid"`
+}
+
+func (rec *api) QueryScheme(access string, params *QuerySchemeParams) (res *QuerySchemeResp, err error) {
+	url := "https://api.weixin.qq.com/wxa/queryscheme?access_token=" + access
+	err = Request().Post(url, params, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	return
+}
+
+type CloudBaseParams struct {
+	Env    string `json:"env"`
+	Domain string `json:"domain"`
+	Path   string `json:"path"`
+	Query  string `json:"query"`
+}
+type GenerateUrlLinkParams struct {
+	Path           string           `json:"path,omitempty"`
+	Query          string           `json:"query,omitempty"`
+	IsExpire       bool             `json:"is_expire,omitempty"`
+	ExpireType     int              `json:"expire_type,omitempty"`
+	ExpireTime     int              `json:"expire_time,omitempty"`
+	ExpireInterval int              `json:"expire_interval,omitempty"`
+	EnvVersion     string           `json:"env_version,omitempty"`
+	CloudBase      *CloudBaseParams `json:"cloud_base,omitempty"`
+}
+type GenerateUrlLinkResp struct {
+	WxCommonResp
+	UrlLink string `json:"url_link"`
+}
+
+func (rec *api) GenerateUrlLink(access string, params *GenerateUrlLinkParams) (res *GenerateUrlLinkResp, err error) {
+	url := "https://api.weixin.qq.com/wxa/generate_urllink?access_token=" + access
+	err = Request().Post(url, params, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	if res.UrlLink == "" {
+		err = errors.New("生成UrlLink失败")
+		return
+	}
+	return
+}
+
+type QueryUrlLinkParams struct {
+	UrlLink string `json:"url_link"`
+}
+
+type QueryUrlLinkResp struct {
+	WxCommonResp
+	UrlLinkInfo struct {
+		AppId      string `json:"appid"`
+		Path       string `json:"path"`
+		Query      string `json:"query"`
+		CreateTime int    `json:"create_time"`
+		ExpireTime int    `json:"expire_time"`
+		EnvVersion string `json:"env_version"`
+	} `json:"url_link_info"`
+	VisitOpenId string `json:"visit_openid"`
+}
+
+func (rec *api) QueryUrlLink(access string, params *QueryUrlLinkParams) (res *QueryUrlLinkResp, err error) {
+	url := "https://api.weixin.qq.com/wxa/query_urllink?access_token=" + access
+	err = Request().Post(url, params, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	return
+}
+
+type GenerateShortLinkParams struct {
+	PageUrl     string `json:"page_url"`
+	PageTitle   string `json:"page_title,omitempty"`
+	IsPermanent bool   `json:"is_permanent,omitempty"`
+}
+type GenerateShortLinkResp struct {
+	WxCommonResp
+	Link string `json:"link"`
+}
+
+func (rec *api) GenerateShortLink(access string, params *GenerateShortLinkParams) (res *GenerateShortLinkResp, err error) {
+	url := "https://api.weixin.qq.com/wxa/genwxashortlink?access_token=" + access
+	err = Request().Post(url, params, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	if res.Link == "" {
+		err = errors.New("生成ShortLink失败")
 		return
 	}
 	return
