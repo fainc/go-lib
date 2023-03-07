@@ -12,13 +12,14 @@ func Api() *api {
 	return &apiVar
 }
 
-type ApiSatResp struct {
-	WxCommonResp
+type SatRes struct {
+	WxCommonRes
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-func (rec *api) GetSat(sdk *SdkClient) (res *ApiSatResp, err error) {
+// GetSat 小程序/公众号通用获取AccessToken方法
+func (rec *api) GetSat(sdk *SdkClient) (res *SatRes, err error) {
 	url := "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + sdk.AppId + "&secret=" + sdk.Secret
 	err = Request().Get(url, &res)
 	if err != nil {
@@ -35,8 +36,8 @@ func (rec *api) GetSat(sdk *SdkClient) (res *ApiSatResp, err error) {
 	return
 }
 
-type MpUserAccessTokenResp struct {
-	WxCommonResp
+type MpUserAccessTokenRes struct {
+	WxCommonRes
 	AccessToken    string `json:"access_token"`
 	ExpiresIn      int    `json:"expires_in"`
 	RefreshToken   string `json:"refresh_token"`
@@ -46,7 +47,7 @@ type MpUserAccessTokenResp struct {
 	UnionId        string `json:"unionid"`
 }
 
-func (rec *api) GetMpUserAccessToken(sdk *SdkClient, code string) (res *MpUserAccessTokenResp, err error) {
+func (rec *api) GetMpUserAccessToken(sdk *SdkClient, code string) (res *MpUserAccessTokenRes, err error) {
 	url := "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + sdk.AppId + "&secret=" + sdk.Secret + "&code=" + code + "&grant_type=authorization_code"
 	err = Request().Get(url, &res)
 	if err != nil {
@@ -63,8 +64,8 @@ func (rec *api) GetMpUserAccessToken(sdk *SdkClient, code string) (res *MpUserAc
 	return
 }
 
-type MpUserInfoResp struct {
-	WxCommonResp
+type MpUserInfoRes struct {
+	WxCommonRes
 	OpenId     string `json:"openid"`
 	Nickname   string `json:"nickname"`
 	Sex        int    `json:"sex"`
@@ -75,7 +76,7 @@ type MpUserInfoResp struct {
 	UnionId    string `json:"unionid"`
 }
 
-func (rec *api) GetMpUserInfo(accessToken string, openid string, lang string) (res *MpUserInfoResp, err error) {
+func (rec *api) GetMpUserInfo(accessToken string, openid string, lang string) (res *MpUserInfoRes, err error) {
 	if lang == "" {
 		lang = "zh_CN"
 	}
@@ -95,13 +96,13 @@ func (rec *api) GetMpUserInfo(accessToken string, openid string, lang string) (r
 	return
 }
 
-type JsApiTicketResp struct {
-	WxCommonResp
+type JsApiTicketRes struct {
+	WxCommonRes
 	Ticket    string `json:"ticket"`
 	ExpiresIn int    `json:"expires_in"`
 }
 
-func (rec *api) GetJsApiTicket(accessToken string) (res *JsApiTicketResp, err error) {
+func (rec *api) GetJsApiTicket(accessToken string) (res *JsApiTicketRes, err error) {
 	url := "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=" + accessToken + "&type=jsapi"
 	err = Request().Get(url, &res)
 	if err != nil {
@@ -118,14 +119,14 @@ func (rec *api) GetJsApiTicket(accessToken string) (res *JsApiTicketResp, err er
 	return
 }
 
-type Code2SessionResp struct {
+type Code2SessionRes struct {
 	OpenId     string `json:"openid"`
 	SessionKey string `json:"session_key"`
 	UnionId    string `json:"unionid"`
-	WxCommonResp
+	WxCommonRes
 }
 
-func (rec *api) Code2Session(sdk *SdkClient, code string) (res *Code2SessionResp, err error) {
+func (rec *api) Code2Session(sdk *SdkClient, code string) (res *Code2SessionRes, err error) {
 	url := "https://api.weixin.qq.com/sns/jscode2session?appid=" + sdk.AppId + "&secret=" + sdk.Secret + "&js_code=" + code + "&grant_type=authorization_code"
 	err = Request().Get(url, &res)
 	if err != nil {
@@ -142,12 +143,19 @@ func (rec *api) Code2Session(sdk *SdkClient, code string) (res *Code2SessionResp
 	return
 }
 
-type PaidUnionIdResp struct {
-	UnionId string `json:"unionid"`
-	WxCommonResp
+type PaidUnionIdParams struct {
+	OpenId        string `json:"openid"`         // * 用户标识
+	TransactionId string `json:"transaction_id"` // 可选，微信支付订单号
+	MchId         string `json:"mch_id"`         // 可选，微信支付分配的商户号，和商户订单号配合使用
+	OutTradeNo    string `json:"out_trade_no"`   // 可选，微信支付商户订单号，和商户号配合使用
 }
 
-func (rec *api) GetPaidUnionId(access string, p *GetPaidUnionIdParams) (res *PaidUnionIdResp, err error) {
+type PaidUnionIdRes struct {
+	UnionId string `json:"unionid"`
+	WxCommonRes
+}
+
+func (rec *api) GetPaidUnionId(access string, p *PaidUnionIdParams) (res *PaidUnionIdRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/getpaidunionid?access_token=" + access + "&openid=" + p.OpenId
 	if p.TransactionId != "" {
 		url = url + "&transaction_id=" + p.TransactionId
@@ -170,16 +178,16 @@ func (rec *api) GetPaidUnionId(access string, p *GetPaidUnionIdParams) (res *Pai
 	return
 }
 
-// UserPhoneNumberResp 为减少Unmarshal错误的可能性，仅保留最小字段PurePhoneNumber、CountryCode，PhoneNumber和watermark忽略
-type UserPhoneNumberResp struct {
-	WxCommonResp
+// UserPhoneNumberRes 为减少Unmarshal错误的可能性，仅保留最小字段PurePhoneNumber、CountryCode，PhoneNumber和watermark忽略
+type UserPhoneNumberRes struct {
+	WxCommonRes
 	PhoneInfo struct {
 		PurePhoneNumber string `json:"purePhoneNumber"`
 		CountryCode     string `json:"countryCode"`
 	} `json:"phone_info"`
 }
 
-func (rec *api) GetUserPhoneNumber(access string, code string) (res *UserPhoneNumberResp, err error) {
+func (rec *api) GetUserPhoneNumber(access string, code string) (res *UserPhoneNumberRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=" + access
 	p := make(map[string]string)
 	p["code"] = code
@@ -212,7 +220,7 @@ type WxACodeParams struct {
 }
 
 func (rec *api) DownloadWxACode(access string, params *WxACodeParams, downloadPath string) (err error) {
-	res := &WxCommonResp{}
+	res := &WxCommonRes{}
 	url := "https://api.weixin.qq.com/wxa/getwxacode?access_token=" + access
 	err = Request().PostAndDownloadCode(url, params, &res, downloadPath)
 	if err != nil {
@@ -237,7 +245,7 @@ type WxACodeUnLimitParams struct {
 }
 
 func (rec *api) DownloadWxACodeUnLimit(access string, params *WxACodeUnLimitParams, downloadPath string) (err error) {
-	res := &WxCommonResp{}
+	res := &WxCommonRes{}
 	url := "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" + access
 	err = Request().PostAndDownloadCode(url, params, &res, downloadPath)
 	if err != nil {
@@ -256,7 +264,7 @@ type WxAQrCodeParams struct {
 }
 
 func (rec *api) DownloadWxAQrCode(access string, params *WxAQrCodeParams, downloadPath string) (err error) {
-	res := &WxCommonResp{}
+	res := &WxCommonRes{}
 	url := "https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=" + access
 	err = Request().PostAndDownloadCode(url, params, &res, downloadPath)
 	if err != nil {
@@ -283,12 +291,12 @@ type GenerateSchemeParams struct {
 	ExpireInterval int            `json:"expire_interval,omitempty"`
 }
 
-type GenerateSchemeResp struct {
-	WxCommonResp
+type GenerateSchemeRes struct {
+	WxCommonRes
 	OpenLink string `json:"openLink"`
 }
 
-func (rec *api) GenerateScheme(access string, params *GenerateSchemeParams) (res *GenerateSchemeResp, err error) {
+func (rec *api) GenerateScheme(access string, params *GenerateSchemeParams) (res *GenerateSchemeRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/generatescheme?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
@@ -311,7 +319,7 @@ type GenerateNFCSchemeParams struct {
 	Sn      string         `json:"sn,omitempty"`
 }
 
-func (rec *api) GenerateNFCScheme(access string, params *GenerateNFCSchemeParams) (res *GenerateSchemeResp, err error) {
+func (rec *api) GenerateNFCScheme(access string, params *GenerateNFCSchemeParams) (res *GenerateSchemeRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/generatenfcscheme?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
@@ -331,8 +339,8 @@ func (rec *api) GenerateNFCScheme(access string, params *GenerateNFCSchemeParams
 type QuerySchemeParams struct {
 	Scheme string `json:"scheme"`
 }
-type QuerySchemeResp struct {
-	WxCommonResp
+type QuerySchemeRes struct {
+	WxCommonRes
 	SchemeInfo struct {
 		AppId      string `json:"appid"`
 		Path       string `json:"path"`
@@ -344,7 +352,7 @@ type QuerySchemeResp struct {
 	VisitOpenId string `json:"visit_openid"`
 }
 
-func (rec *api) QueryScheme(access string, params *QuerySchemeParams) (res *QuerySchemeResp, err error) {
+func (rec *api) QueryScheme(access string, params *QuerySchemeParams) (res *QuerySchemeRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/queryscheme?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
@@ -373,12 +381,12 @@ type GenerateUrlLinkParams struct {
 	EnvVersion     string           `json:"env_version,omitempty"`
 	CloudBase      *CloudBaseParams `json:"cloud_base,omitempty"`
 }
-type GenerateUrlLinkResp struct {
-	WxCommonResp
+type GenerateUrlLinkRes struct {
+	WxCommonRes
 	UrlLink string `json:"url_link"`
 }
 
-func (rec *api) GenerateUrlLink(access string, params *GenerateUrlLinkParams) (res *GenerateUrlLinkResp, err error) {
+func (rec *api) GenerateUrlLink(access string, params *GenerateUrlLinkParams) (res *GenerateUrlLinkRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/generate_urllink?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
@@ -399,8 +407,8 @@ type QueryUrlLinkParams struct {
 	UrlLink string `json:"url_link"`
 }
 
-type QueryUrlLinkResp struct {
-	WxCommonResp
+type QueryUrlLinkRes struct {
+	WxCommonRes
 	UrlLinkInfo struct {
 		AppId      string `json:"appid"`
 		Path       string `json:"path"`
@@ -412,7 +420,7 @@ type QueryUrlLinkResp struct {
 	VisitOpenId string `json:"visit_openid"`
 }
 
-func (rec *api) QueryUrlLink(access string, params *QueryUrlLinkParams) (res *QueryUrlLinkResp, err error) {
+func (rec *api) QueryUrlLink(access string, params *QueryUrlLinkParams) (res *QueryUrlLinkRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/query_urllink?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
@@ -430,12 +438,12 @@ type GenerateShortLinkParams struct {
 	PageTitle   string `json:"page_title,omitempty"`
 	IsPermanent bool   `json:"is_permanent,omitempty"`
 }
-type GenerateShortLinkResp struct {
-	WxCommonResp
+type GenerateShortLinkRes struct {
+	WxCommonRes
 	Link string `json:"link"`
 }
 
-func (rec *api) GenerateShortLink(access string, params *GenerateShortLinkParams) (res *GenerateShortLinkResp, err error) {
+func (rec *api) GenerateShortLink(access string, params *GenerateShortLinkParams) (res *GenerateShortLinkRes, err error) {
 	url := "https://api.weixin.qq.com/wxa/genwxashortlink?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
@@ -447,6 +455,62 @@ func (rec *api) GenerateShortLink(access string, params *GenerateShortLinkParams
 	}
 	if res.Link == "" {
 		err = errors.New("生成ShortLink失败")
+		return
+	}
+	return
+}
+
+type MessageValue struct {
+	Value string `json:"value"`
+	Color string `json:"color,omitempty"`
+}
+type MessageMiniProgramConf struct {
+	AppId    string `json:"appid"`
+	PagePath string `json:"pagepath"`
+}
+type MpTemplateMsg struct {
+	AppId       string                   `json:"appid"`
+	TemplateId  string                   `json:"template_id"`
+	Url         string                   `json:"url"`
+	MiniProgram *MessageMiniProgramConf  `json:"miniprogram"`
+	Data        map[string]*MessageValue `json:"data"`
+}
+
+type UniformMessageParams struct {
+	ToUser        string         `json:"touser"`
+	MpTemplateMsg *MpTemplateMsg `json:"mp_template_msg"`
+}
+
+func (rec *api) SendUniformMessage(access string, params *UniformMessageParams) (res *WxCommonRes, err error) {
+	url := "https://api.weixin.qq.com/cgi-bin/message/wxopen/template/uniform_send?access_token=" + access
+	err = Request().Post(url, params, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	return
+}
+
+type MiniProgramSubscribeMessageParams struct {
+	ToUser           string                   `json:"touser"`
+	TemplateId       string                   `json:"template_id"`
+	Page             string                   `json:"page,omitempty"`
+	MiniProgramState string                   `json:"miniprogram_state"`
+	Lang             string                   `json:"lang"`
+	Data             map[string]*MessageValue `json:"data"`
+}
+
+func (rec *api) SendSubscribeMessage(access string, params *MiniProgramSubscribeMessageParams) (res *WxCommonRes, err error) {
+	url := "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + access
+	err = Request().Post(url, params, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
 		return
 	}
 	return

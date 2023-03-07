@@ -4,12 +4,16 @@ import (
 	"net/url"
 )
 
-type mp struct{}
+type mp struct {
+	sdk *SdkClient
+}
 
-var mpVar = mp{}
-
-func Mp() *mp {
-	return &mpVar
+func Mp(AppId string) (*mp, error) {
+	sdk, err := Client().Get(AppId)
+	if err != nil {
+		return nil, err
+	}
+	return &mp{sdk}, nil
 }
 
 type AuthorizationParams struct {
@@ -19,24 +23,23 @@ type AuthorizationParams struct {
 }
 
 // GetAuthorizationUrl 获取微信授权登录URL
-func (rec *mp) GetAuthorizationUrl(sdk *SdkClient, params *AuthorizationParams) string {
+func (rec *mp) GetAuthorizationUrl(params *AuthorizationParams) string {
 	if params.Scope == "" {
 		params.Scope = "snsapi_base"
 	}
 	params.RedirectUri = url.QueryEscape(params.RedirectUri)
-	return "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" + sdk.AppId + "&redirect_uri=" + params.RedirectUri + "&response_type=code&scope=" + params.Scope + "&state=" + params.State + "#wechat_redirect"
+	return "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" + rec.sdk.AppId + "&redirect_uri=" + params.RedirectUri + "&response_type=code&scope=" + params.Scope + "&state=" + params.State + "#wechat_redirect"
 }
 
 // Code2AccessToken 微信公众号授权登录 获取OpenId和AccessToken
-func (rec *mp) Code2AccessToken(sdk *SdkClient, code string) (res *MpUserAccessTokenResp, err error) {
-	res, err = Api().GetMpUserAccessToken(sdk, code)
+func (rec *mp) Code2AccessToken(code string) (res *MpUserAccessTokenRes, err error) {
+	res, err = Api().GetMpUserAccessToken(rec.sdk, code)
 	if err != nil {
 		return
 	}
-	// todo uat缓存
 	return
 }
-func (rec *mp) GetUserInfo(accessToken string, openId string, lang string) (res *MpUserInfoResp, err error) {
+func (rec *mp) GetUserInfo(accessToken string, openId string, lang string) (res *MpUserInfoRes, err error) {
 	res, err = Api().GetMpUserInfo(accessToken, openId, lang)
 	return
 }

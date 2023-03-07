@@ -18,7 +18,7 @@ func Request() *request {
 	return &requestVar
 }
 
-type WxCommonResp struct {
+type WxCommonRes struct {
 	ErrCode int    `json:"errcode"`
 	ErrMsg  string `json:"errmsg"`
 }

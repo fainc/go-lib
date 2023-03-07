@@ -3,7 +3,9 @@ package wechat_sdk
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -15,10 +17,31 @@ func JsSdk() *jsSdk {
 	return &jsSdkVar
 }
 
-func (rec *jsSdk) GetJsApiTicket(sdk *SdkClient) (jat string, err error) {
+func (rec *jsSdk) GetJsApiTicket(sdk *SdkClient) (ticket string, err error) {
+	ticket, err = rec.getJsApiTicket(sdk)
+	if err != nil {
+		return
+	}
+	if ticket == "" {
+		ticket, err = rec.RefreshJsApiTicket(sdk)
+		return
+	}
+	return
+}
+func (rec *jsSdk) getJsApiTicket(sdk *SdkClient) (jat string, err error) {
+	if sdk.JatRwLock == nil {
+		sdk.JatRwLock = new(sync.RWMutex)
+	}
+	defer sdk.JatRwLock.RUnlock()
+	sdk.JatRwLock.RLock()
 	switch Cache().GetEngine() {
 	case "redis":
 		jat, err = Cache().GetRedisCache("jat", sdk.AppId)
+		if err != nil {
+			return
+		}
+	case "remote": // 通过远程凭据中心获取
+		jat, err = RemoteCredentials().GetJat(sdk)
 		if err != nil {
 			return
 		}
@@ -28,14 +51,14 @@ func (rec *jsSdk) GetJsApiTicket(sdk *SdkClient) (jat string, err error) {
 			return
 		}
 	}
-	if jat == "" {
-		jat, err = rec.RefreshJsApiTicket(sdk)
-		return
-	}
 	return
 }
-
 func (rec *jsSdk) RefreshJsApiTicket(sdk *SdkClient) (jat string, err error) {
+	if sdk.JatRwLock == nil {
+		sdk.JatRwLock = new(sync.RWMutex)
+	}
+	sdk.JatRwLock.Lock()
+	defer sdk.JatRwLock.Unlock()
 	s, err := Sat().Get(sdk)
 	if err != nil {
 		return
@@ -77,7 +100,7 @@ func (rec *jsSdk) GetJsApiConfig(sdk *SdkClient, url string) (res *JsApiConfigRe
 		Timestamp: strconv.FormatInt(time.Now().Unix(), 10),
 		NonceStr:  Utils().GetNonceStr(),
 	}
-	str := "jsapi_ticket=" + ticket + "&noncestr=" + res.NonceStr + "&timestamp=" + res.Timestamp + "&url=" + url
+	str := fmt.Sprintf("jsapi_ticket=%s&noncestr=%s&timestamp=%s&url=%s", ticket, res.NonceStr, res.Timestamp, url)
 	h := sha1.New()
 	h.Write([]byte(str))
 	res.Signature = hex.EncodeToString(h.Sum(nil))

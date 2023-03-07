@@ -4,31 +4,30 @@ import (
 	"fmt"
 )
 
-type miniProgram struct{}
+type miniProgram struct {
+	sdk *SdkClient
+}
 
-var miniProgramVar = miniProgram{}
+// var miniProgramVar = miniProgram{}
 
-func MiniProgram() *miniProgram {
-	return &miniProgramVar
+func MiniProgram(AppId string) (*miniProgram, error) {
+	sdk, err := Client().Get(AppId)
+	if err != nil {
+		return nil, err
+	}
+	return &miniProgram{sdk}, nil
 }
 
 // Code2Session 小程序登录，获取session和openId、unionId(开放平台关联才有该值)
-func (rec *miniProgram) Code2Session(sdk *SdkClient, code string) (res *Code2SessionResp, err error) {
-	res, err = Api().Code2Session(sdk, code)
+func (rec *miniProgram) Code2Session(code string) (res *Code2SessionRes, err error) {
+	res, err = Api().Code2Session(rec.sdk, code)
 	return
-}
-
-type GetPaidUnionIdParams struct {
-	OpenId        string `json:"openid"`         // * 用户标识
-	TransactionId string `json:"transaction_id"` // 可选，微信支付订单号
-	MchId         string `json:"mch_id"`         // 可选，微信支付分配的商户号，和商户订单号配合使用
-	OutTradeNo    string `json:"out_trade_no"`   // 可选，微信支付商户订单号，和商户号配合使用
 }
 
 // GetPaidUnionId 支付后获取unionId，调用前需要用户完成支付，且在支付后的五分钟内有效。
 // 使用微信支付订单号（transaction_id）和微信支付商户订单号和微信支付商户号（out_trade_no 及 mch_id），二选一
-func (rec *miniProgram) GetPaidUnionId(sdk *SdkClient, p *GetPaidUnionIdParams) (res *PaidUnionIdResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) GetPaidUnionId(p *PaidUnionIdParams) (res *PaidUnionIdRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -37,8 +36,8 @@ func (rec *miniProgram) GetPaidUnionId(sdk *SdkClient, p *GetPaidUnionIdParams) 
 }
 
 // GetUserPhoneNumber 获取小程序用户手机号
-func (rec *miniProgram) GetUserPhoneNumber(sdk *SdkClient, code string) (res *UserPhoneNumberResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) GetUserPhoneNumber(code string) (res *UserPhoneNumberRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -48,13 +47,13 @@ func (rec *miniProgram) GetUserPhoneNumber(sdk *SdkClient, code string) (res *Us
 
 // DownloadWxACode 获取小程序码
 //  doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/getQRCode.html
-func (rec *miniProgram) DownloadWxACode(sdk *SdkClient, params *WxACodeParams, downloadPath string) (path string, err error) {
+func (rec *miniProgram) DownloadWxACode(params *WxACodeParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
 		return
 	}
 	suffix := Utils().HyaLineSuffix(params.IsHyaLine)
 	path = downloadPath + "WxACode_" + Utils().GetNonceStr() + suffix
-	token, err := Sat().Get(sdk)
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -64,7 +63,7 @@ func (rec *miniProgram) DownloadWxACode(sdk *SdkClient, params *WxACodeParams, d
 
 // DownloadWxACodeUnLimit 获取不限制的小程序码
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/getUnlimitedQRCode.html
-func (rec *miniProgram) DownloadWxACodeUnLimit(sdk *SdkClient, params *WxACodeUnLimitParams, downloadPath string) (path string, err error) {
+func (rec *miniProgram) DownloadWxACodeUnLimit(params *WxACodeUnLimitParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
 		return
 	}
@@ -73,7 +72,7 @@ func (rec *miniProgram) DownloadWxACodeUnLimit(sdk *SdkClient, params *WxACodeUn
 	}
 	suffix := Utils().HyaLineSuffix(params.IsHyaLine)
 	path = downloadPath + "WxACodeUL_" + Utils().GetNonceStr() + suffix
-	token, err := Sat().Get(sdk)
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -83,12 +82,12 @@ func (rec *miniProgram) DownloadWxACodeUnLimit(sdk *SdkClient, params *WxACodeUn
 
 // DownloadWxAQrCode 获取小程序二维码
 //  doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/createQRCode.html
-func (rec *miniProgram) DownloadWxAQrCode(sdk *SdkClient, params *WxAQrCodeParams, downloadPath string) (path string, err error) {
+func (rec *miniProgram) DownloadWxAQrCode(params *WxAQrCodeParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
 		return
 	}
 	path = downloadPath + "WxAQrCode_" + Utils().GetNonceStr() + ".jpeg"
-	token, err := Sat().Get(sdk)
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -98,8 +97,8 @@ func (rec *miniProgram) DownloadWxAQrCode(sdk *SdkClient, params *WxAQrCodeParam
 
 // GenerateScheme 生成小程序 Scheme URL
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/url-scheme/generateScheme.html
-func (rec *miniProgram) GenerateScheme(sdk *SdkClient, params *GenerateSchemeParams) (res *GenerateSchemeResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) GenerateScheme(params *GenerateSchemeParams) (res *GenerateSchemeRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -109,8 +108,8 @@ func (rec *miniProgram) GenerateScheme(sdk *SdkClient, params *GenerateSchemePar
 
 // GenerateNFCScheme 生成小程序NFC Scheme URL
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/url-scheme/generateNFCScheme.html
-func (rec *miniProgram) GenerateNFCScheme(sdk *SdkClient, params *GenerateNFCSchemeParams) (res *GenerateSchemeResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) GenerateNFCScheme(params *GenerateNFCSchemeParams) (res *GenerateSchemeRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -120,8 +119,8 @@ func (rec *miniProgram) GenerateNFCScheme(sdk *SdkClient, params *GenerateNFCSch
 
 // QueryScheme 查询Scheme
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/url-scheme/queryScheme.html
-func (rec *miniProgram) QueryScheme(sdk *SdkClient, params *QuerySchemeParams) (res *QuerySchemeResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) QueryScheme(params *QuerySchemeParams) (res *QuerySchemeRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -131,8 +130,8 @@ func (rec *miniProgram) QueryScheme(sdk *SdkClient, params *QuerySchemeParams) (
 
 // GenerateUrlLink 生成UrlLink
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/url-link/generateUrlLink.html
-func (rec *miniProgram) GenerateUrlLink(sdk *SdkClient, params *GenerateUrlLinkParams) (res *GenerateUrlLinkResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) GenerateUrlLink(params *GenerateUrlLinkParams) (res *GenerateUrlLinkRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -142,8 +141,8 @@ func (rec *miniProgram) GenerateUrlLink(sdk *SdkClient, params *GenerateUrlLinkP
 
 // QueryUrlLink 查询 UrlLink
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/url-link/queryUrlLink.html
-func (rec *miniProgram) QueryUrlLink(sdk *SdkClient, params *QueryUrlLinkParams) (res *QueryUrlLinkResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) QueryUrlLink(params *QueryUrlLinkParams) (res *QueryUrlLinkRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
@@ -153,8 +152,8 @@ func (rec *miniProgram) QueryUrlLink(sdk *SdkClient, params *QueryUrlLinkParams)
 
 // GenerateShortLink 生成小程序短链接 适用于微信内拉起小程序
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/short-link/generateShortLink.html
-func (rec *miniProgram) GenerateShortLink(sdk *SdkClient, params *GenerateShortLinkParams) (res *GenerateShortLinkResp, err error) {
-	token, err := Sat().Get(sdk)
+func (rec *miniProgram) GenerateShortLink(params *GenerateShortLinkParams) (res *GenerateShortLinkRes, err error) {
+	token, err := Sat().Get(rec.sdk)
 	if err != nil {
 		return
 	}
