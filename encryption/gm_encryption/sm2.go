@@ -9,13 +9,8 @@ import (
 	"github.com/tjfoc/gmsm/x509"
 )
 
-// SM2GenerateKey 生成国密 SM2 密钥
-func SM2GenerateKey(pwd string) (pri []byte, pub []byte, err error) {
-	var password []byte
-	if pwd != "" {
-		password = []byte(pwd)
-	}
-	key, err := sm2.GenerateKey(rand.Reader)
+func sm2generateKey() (key *sm2.PrivateKey, err error) {
+	key, err = sm2.GenerateKey(rand.Reader)
 	if err != nil {
 		return
 	}
@@ -23,20 +18,35 @@ func SM2GenerateKey(pwd string) (pri []byte, pub []byte, err error) {
 		err = errors.New("生成密钥非SM2曲线")
 		return
 	}
-	pri, err = x509.WritePrivateKeyToPem(key, password) // 生成密钥文件
+	return
+}
+
+// SM2GenerateKeyPem 生成带格式的国密 SM2 密钥
+func SM2GenerateKeyPem(pwd string) (pri string, pub string, err error) {
+	var password []byte
+	if pwd != "" {
+		password = []byte(pwd)
+	}
+	key, err := sm2generateKey()
+	if err != nil {
+		return
+	}
+	priByte, err := x509.WritePrivateKeyToPem(key, password) // 生成密钥文件
 	if err != nil {
 		return
 	}
 	pubKey, _ := key.Public().(*sm2.PublicKey)
-	pub, err = x509.WritePublicKeyToPem(pubKey) // 生成公钥文件
+	pubByte, err := x509.WritePublicKeyToPem(pubKey) // 生成公钥文件
 	if err != nil {
 		return
 	}
+	pri = string(priByte)
+	pub = string(pubByte)
 	return
 }
 
-func EncryptAsn1(pubPem []byte, data string) (cipherText string, err error) {
-	pub, err := x509.ReadPublicKeyFromPem(pubPem)
+func EncryptAsn1(pubPem string, data string) (cipherText string, err error) {
+	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
 	}
@@ -47,12 +57,12 @@ func EncryptAsn1(pubPem []byte, data string) (cipherText string, err error) {
 	return base64.StdEncoding.EncodeToString(cipher), nil
 }
 
-func DecryptAsn1(priPem []byte, pwd string, data string) (plainText string, err error) {
+func DecryptAsn1(priPem string, pwd string, data string) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
 	}
-	pri, err := x509.ReadPrivateKeyFromPem(priPem, password)
+	pri, err := x509.ReadPrivateKeyFromPem([]byte(priPem), password)
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
 		return
@@ -70,12 +80,12 @@ func DecryptAsn1(priPem []byte, pwd string, data string) (plainText string, err 
 	return string(plain), nil
 }
 
-func PrivateSign(priPem []byte, pwd string, data string) (signStr string, err error) {
+func PrivateSign(priPem string, pwd string, data string) (signStr string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
 	}
-	pri, err := x509.ReadPrivateKeyFromPem(priPem, password)
+	pri, err := x509.ReadPrivateKeyFromPem([]byte(priPem), password)
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
 		return
@@ -88,8 +98,8 @@ func PrivateSign(priPem []byte, pwd string, data string) (signStr string, err er
 	return base64.StdEncoding.EncodeToString(sign), nil
 }
 
-func PublicVerify(pubPem []byte, data string, sign string) (ok bool, err error) {
-	pub, err := x509.ReadPublicKeyFromPem(pubPem)
+func PublicVerify(pubPem string, data string, sign string) (ok bool, err error) {
+	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
 		return
