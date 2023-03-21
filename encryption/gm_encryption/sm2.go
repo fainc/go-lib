@@ -67,6 +67,29 @@ func SM2ReadPrivateKeyFromPath(filePath string, password string) (pri *sm2.Priva
 	}
 	return
 }
+
+func SM2ReadPublicKeyFromPem(pubPem string) (pub *sm2.PublicKey, err error) {
+	pub, err = x509.ReadPublicKeyFromPem([]byte(pubPem))
+	if err != nil {
+		err = errors.New("加载公钥证书失败，请检查证书")
+		return
+	}
+	return
+}
+
+func SM2ReadPublicKeyFromPath(filePath string) (pub *sm2.PublicKey, err error) {
+	f, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		err = errors.New("读取密钥证书文件失败")
+		return
+	}
+	pub, err = x509.ReadPublicKeyFromPem(f)
+	if err != nil {
+		err = errors.New("加载公钥证书失败，请检查证书")
+		return
+	}
+	return
+}
 func EncryptAsn1(pubPem string, data string) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
