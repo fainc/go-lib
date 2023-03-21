@@ -11,5 +11,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/google/uuid v1.3.0
 	github.com/redis/go-redis/v9 v9.0.2
+	github.com/tjfoc/gmsm v1.4.1
 	golang.org/x/time v0.3.0 // indirect
 )
