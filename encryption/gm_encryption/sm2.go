@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"io/ioutil"
 
 	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tjfoc/gmsm/x509"
@@ -45,6 +46,27 @@ func SM2GenerateKeyPem(pwd string) (pri string, pub string, err error) {
 	return
 }
 
+func SM2ReadPrivateKeyFromPem(priPem string, password string) (pri *sm2.PrivateKey, err error) {
+	pri, err = x509.ReadPrivateKeyFromPem([]byte(priPem), []byte(password))
+	if err != nil {
+		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
+		return
+	}
+	return
+}
+func SM2ReadPrivateKeyFromPath(filePath string, password string) (pri *sm2.PrivateKey, err error) {
+	f, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		err = errors.New("读取密钥证书文件失败")
+		return
+	}
+	pri, err = x509.ReadPrivateKeyFromPem(f, []byte(password))
+	if err != nil {
+		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
+		return
+	}
+	return
+}
 func EncryptAsn1(pubPem string, data string) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
