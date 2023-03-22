@@ -149,7 +149,7 @@ func DecryptAsn1(priPem string, pwd string, data string, mode string) (plainText
 	return string(plain), nil
 }
 
-func PrivateSign(priPem string, pwd string, data string) (signStr string, err error) {
+func PrivateSign(priPem string, pwd string, data string, mode string) (signStr string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -164,19 +164,31 @@ func PrivateSign(priPem string, pwd string, data string) (signStr string, err er
 		err = errors.New("签名失败，请检查私钥证书")
 		return
 	}
+	if mode == "hex" {
+		return hex.EncodeToString(sign), nil
+	}
 	return base64.StdEncoding.EncodeToString(sign), nil
 }
 
-func PublicVerify(pubPem string, data string, sign string) (ok bool, err error) {
+func PublicVerify(pubPem string, data string, sign string, mode string) (ok bool, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
 		return
 	}
-	sd, err := base64.StdEncoding.DecodeString(sign)
-	if err != nil {
-		err = errors.New("签名数据处理失败")
-		return
+	var sd []byte
+	if mode == "hex" {
+		sd, err = hex.DecodeString(sign)
+		if err != nil {
+			err = errors.New("签名数据处理失败")
+			return
+		}
+	} else {
+		sd, err = base64.StdEncoding.DecodeString(sign)
+		if err != nil {
+			err = errors.New("签名数据处理失败")
+			return
+		}
 	}
 	ok = pub.Verify([]byte(data), sd) // sm2签名
 	return
