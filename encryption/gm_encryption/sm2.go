@@ -2,6 +2,7 @@ package gm_encryption
 
 import (
 	"crypto/rand"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -219,7 +220,7 @@ func PrivateSign(priPem string, pwd string, data string, mode string) (signStr s
 	return base64.StdEncoding.EncodeToString(sign), nil
 }
 
-func PublicVerify(pubPem string, data string, sign string, mode string) (ok bool, err error) {
+func PublicVerify(pubPem string, data string, sign string, mode string, isAsn1 bool) (ok bool, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
@@ -239,6 +240,16 @@ func PublicVerify(pubPem string, data string, sign string, mode string) (ok bool
 			return
 		}
 	}
-	ok = pub.Verify([]byte(data), sd) // sm2签名
+	var marshal []byte
+	if !isAsn1 {
+		marshal, err = asn1.Marshal(sd)
+		if err != nil {
+			return
+		}
+	} else {
+		marshal = sd
+	}
+
+	ok = pub.Verify([]byte(data), marshal) // sm2签名
 	return
 }
