@@ -1,4 +1,4 @@
-package gm_crypto_v1
+package gm_crypto
 
 import (
 	"encoding/base64"

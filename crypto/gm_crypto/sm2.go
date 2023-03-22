@@ -1,4 +1,4 @@
-package gm_crypto_v1
+package gm_crypto
 
 import (
 	"crypto/rand"
@@ -198,6 +198,8 @@ func Decrypt(priPem string, pwd string, data string, inFormat string, mode int) 
 	return string(plain), nil
 }
 
+// PrivateSign 签名 der编解码 sm3杂凑
+// 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
 func PrivateSign(priPem string, pwd string, data string, mode string) (signStr string, err error) {
 	var password []byte
 	if pwd != "" {
@@ -219,14 +221,19 @@ func PrivateSign(priPem string, pwd string, data string, mode string) (signStr s
 	return base64.StdEncoding.EncodeToString(sign), nil
 }
 
-func PublicVerify(pubPem string, data string, sign string, mode string, isAsn1 bool) (ok bool, err error) {
+// PublicVerify 签名验证 der编解码 sm3杂凑
+// 注意，如前端使用 https://github.com/JuneAndGreen/sm-crypto/  der 和 hash 参数需要为true（启用杂凑和asn.1 der编码）
+//  sm2.doSignature("123", privateHex,{der:true,hash:true})
+// 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
+
+func PublicVerify(pubPem string, data string, sign string, inFormat string) (ok bool, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
 		return
 	}
 	var sd []byte
-	if mode == "hex" {
+	if inFormat == "hex" {
 		sd, err = hex.DecodeString(sign)
 		if err != nil {
 			err = errors.New("签名数据处理失败")

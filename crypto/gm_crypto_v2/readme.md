@@ -1,2 +1,2 @@
 - based on https://github.com/emmansun/gmsm
-- 新版本实现 完善 gm_crypto_v1 的问题
+- 新版本实现 优化sm2 TPS问题
