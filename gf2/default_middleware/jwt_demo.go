@@ -16,7 +16,7 @@ func JwtUserAuth(r *ghttp.Request) {
 		"scope",
 	}, "secret")
 	if err != nil && !inWhiteTables {
-		response.Json().Authorization(r.Context(), err.Error(), nil)
+		response.Json().UnAuthorizedError(r.Context(), err.Error(), nil)
 		return // return 后下个中间件不执行
 	}
 	g.Dump(claims)

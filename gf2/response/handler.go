@@ -26,12 +26,24 @@ func HandlerResponse(r *ghttp.Request) {
 
 	// 已有err错误
 	if err != nil {
-		if code.Code() == 50 || code.Code() == 52 { // 服务器错误
-			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
+		if code.Code() == 50 || code.Code() == 52 || code.Code() == 500 { // 服务器错误
+			Json().InternalError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
 		}
 		if code.Code() == 401 { // 登录
-			Json().Authorization(ctx, code.Message(), code.Detail())
+			Json().UnAuthorizedError(ctx, code.Message(), code.Detail())
+			return
+		}
+		if code.Code() == 402 { // 登录
+			Json().DecryptError(ctx, code.Message(), code.Detail())
+			return
+		}
+		if code.Code() == 403 { // 登录
+			Json().SignatureError(ctx, code.Message(), code.Detail())
+			return
+		}
+		if code.Code() == 404 { // 登录
+			Json().NotFoundError(ctx, code.Message())
 			return
 		}
 		Json().Error(ctx, err.Error(), code.Code(), code.Detail()) // 常规错误
@@ -52,14 +64,14 @@ func HandlerResponse(r *ghttp.Request) {
 	if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
 		switch r.Response.Status {
 		case http.StatusNotFound: // 404
-			Json().NotFound(ctx, g.I18n().Translate(ctx, "NotFound"))
+			Json().NotFoundError(ctx, g.I18n().Translate(ctx, "NotFound"))
 			return
 		case http.StatusUnauthorized: // 401
 			return
 		case http.StatusBadRequest: // 400
 			return
 		default:
-			Json().ServerError(ctx, g.I18n().Translate(ctx, "InternalError"))
+			Json().InternalError(ctx, g.I18n().Translate(ctx, "InternalError"))
 			return
 		}
 	}

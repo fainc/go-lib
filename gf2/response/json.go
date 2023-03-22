@@ -21,23 +21,28 @@ func Json() *json {
 }
 
 func (rec *json) Success(ctx context.Context, data interface{}) {
-	rec.Writer(ctx, data, "Success", 200, 200, 0, nil)
+	rec.Writer(ctx, data, "Success", 200, 0, nil)
 }
 
+// Error errCode 建议使用400通用错误码（或自定义四位错误码与HTTP状态码区分开），一般不使用公共的401,402,403,404错误码，除非明确输出的是相关内容
 func (rec *json) Error(ctx context.Context, message string, errCode int, ext interface{}) {
-	rec.Writer(ctx, nil, message, 400, 400, errCode, ext)
+	rec.Writer(ctx, nil, message, 400, errCode, ext)
 }
 
-func (rec *json) ServerError(ctx context.Context, message string) {
-	rec.Writer(ctx, nil, message, 500, 500, 500, nil)
+func (rec *json) InternalError(ctx context.Context, message string) {
+	rec.Writer(ctx, nil, message, 500, 500, nil)
 }
-
-func (rec *json) Authorization(ctx context.Context, message string, ext interface{}) {
-	rec.Writer(ctx, nil, message, 401, 401, 401, ext)
+func (rec *json) UnAuthorizedError(ctx context.Context, message string, ext interface{}) {
+	rec.Writer(ctx, nil, message, 401, 401, ext)
 }
-
-func (rec *json) NotFound(ctx context.Context, message string) {
-	rec.Writer(ctx, nil, message, 404, 404, 404, nil)
+func (rec *json) DecryptError(ctx context.Context, message string, ext interface{}) {
+	rec.Writer(ctx, nil, message, 402, 402, ext)
+}
+func (rec *json) SignatureError(ctx context.Context, message string, ext interface{}) {
+	rec.Writer(ctx, nil, message, 403, 403, ext)
+}
+func (rec *json) NotFoundError(ctx context.Context, message string) {
+	rec.Writer(ctx, nil, message, 404, 404, nil)
 }
 
 type JsonFormat struct {
@@ -56,9 +61,9 @@ type JsonFormat struct {
 }
 
 // Writer 标准格式数据输出
-func (rec *json) Writer(ctx context.Context, data interface{}, message string, status int, code int, errCode int, ext interface{}) {
+func (rec *json) Writer(ctx context.Context, data interface{}, message string, code int, errCode int, ext interface{}) {
 	r := g.RequestFromCtx(ctx)
-	r.Response.WriteStatus(status)
+	r.Response.WriteStatus(code)
 	r.Response.ClearBuffer()
 	serverName, _ := os.Hostname()
 	serverName, _ = gmd5.Encrypt(serverName)

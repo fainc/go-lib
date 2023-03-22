@@ -10,7 +10,7 @@ import (
 // ShutdownLock 停机中间件
 func ShutdownLock(r *ghttp.Request) {
 	if default_controller.IsShutdown && r.RequestURI != default_controller.ShutdownUnlockUri {
-		response.Json().Error(r.Context(), default_controller.ShutdownMsg, 401, nil)
+		response.Json().Error(r.Context(), default_controller.ShutdownMsg, 400, nil)
 		return
 	}
 	r.Middleware.Next()
