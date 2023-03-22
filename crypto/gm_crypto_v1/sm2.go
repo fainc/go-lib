@@ -1,8 +1,7 @@
-package gm_encryption
+package gm_crypto_v1
 
 import (
 	"crypto/rand"
-	"encoding/asn1"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -240,16 +239,6 @@ func PublicVerify(pubPem string, data string, sign string, mode string, isAsn1 b
 			return
 		}
 	}
-	var marshal []byte
-	if !isAsn1 {
-		marshal, err = asn1.Marshal(sd)
-		if err != nil {
-			return
-		}
-	} else {
-		marshal = sd
-	}
-
-	ok = pub.Verify([]byte(data), marshal) // sm2签名
+	ok = pub.Verify([]byte(data), sd) // sm2签名
 	return
 }

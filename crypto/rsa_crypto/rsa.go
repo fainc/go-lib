@@ -1,4 +1,4 @@
-package rsa_encryption
+package rsa_crypto
 
 import (
 	"crypto/rand"

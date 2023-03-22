@@ -1,0 +1,3 @@
+- based on https://github.com/tjfoc/gmsm/
+- 该库测试SM2 验签与前端未跑通，故调整为V1
+- 新版本实现 参见 gm_crypto_v2

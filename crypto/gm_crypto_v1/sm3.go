@@ -1,4 +1,4 @@
-package gm_encryption
+package gm_crypto_v1
 
 import (
 	"encoding/hex"
