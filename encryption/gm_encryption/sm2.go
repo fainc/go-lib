@@ -3,6 +3,7 @@ package gm_encryption
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"io/ioutil"
 
@@ -23,7 +24,7 @@ func sm2generateKey() (key *sm2.PrivateKey, err error) {
 }
 
 // SM2GenerateKeyPem 生成带格式的国密 SM2 密钥
-func SM2GenerateKeyPem(pwd string) (pri string, pub string, err error) {
+func SM2GenerateKeyPem(pwd string) (pri, pub string, priHex, pubHex string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -43,6 +44,15 @@ func SM2GenerateKeyPem(pwd string) (pri string, pub string, err error) {
 	}
 	pri = string(priByte)
 	pub = string(pubByte)
+
+	// 解决前后端对接问题，hex密钥输出给JS端使用
+	// 前后端对接注意JS 是否需要要给公钥和密文处理04标识
+	// https://github.com/JuneAndGreen/sm-crypto/issues/42
+
+	// 私钥 hex
+	priHex = hex.EncodeToString(key.D.Bytes())
+	// 公钥 hex（如需要04标识请自行添加）
+	pubHex = hex.EncodeToString(pubKey.X.Bytes()) + hex.EncodeToString(pubKey.Y.Bytes())
 	return
 }
 
