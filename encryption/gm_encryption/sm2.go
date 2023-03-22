@@ -100,7 +100,7 @@ func SM2ReadPublicKeyFromPath(filePath string) (pub *sm2.PublicKey, err error) {
 	}
 	return
 }
-func EncryptAsn1(pubPem string, data string) (cipherText string, err error) {
+func EncryptAsn1(pubPem string, data string, mode string) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -109,10 +109,14 @@ func EncryptAsn1(pubPem string, data string) (cipherText string, err error) {
 	if err != nil {
 		return
 	}
+	if mode == "hex" {
+		return hex.EncodeToString(cipher), nil
+	}
 	return base64.StdEncoding.EncodeToString(cipher), nil
+
 }
 
-func DecryptAsn1(priPem string, pwd string, data string) (plainText string, err error) {
+func DecryptAsn1(priPem string, pwd string, data string, mode string) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -122,11 +126,21 @@ func DecryptAsn1(priPem string, pwd string, data string) (plainText string, err 
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
 		return
 	}
-	d, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
-		err = errors.New("待解密数据处理失败")
-		return
+	var d []byte
+	if mode == "hex" {
+		d, err = base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			err = errors.New("待解密数据处理失败")
+			return
+		}
+	} else {
+		d, err = hex.DecodeString(data)
+		if err != nil {
+			err = errors.New("待解密数据处理失败")
+			return
+		}
 	}
+
 	plain, err := pri.DecryptAsn1(d) // sm2解密
 	if err != nil {
 		err = errors.New("数据解密失败，请核对私钥证书是否正确")
