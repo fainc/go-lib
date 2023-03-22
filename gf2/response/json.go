@@ -80,10 +80,13 @@ func (rec *json) CustomWriter(ctx context.Context, data interface{}, status ...i
 	if len(status) >= 1 && status[0] != 200 {
 		statusCode = status[0]
 	}
+	serverName, _ := os.Hostname()
+	serverId, _ := gmd5.Encrypt(serverName)
 	r := g.RequestFromCtx(ctx)
 	r.Response.WriteStatus(statusCode)
 	r.Response.ClearBuffer()
 	r.Response.WriteJson(data)
 	r.Response.Header().Set("Content-Type", "application/json;charset=utf-8")
+	r.Response.Header().Set("Server-Id", serverId)
 	r.ExitAll()
 }

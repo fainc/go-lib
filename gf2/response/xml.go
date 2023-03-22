@@ -2,7 +2,9 @@ package response
 
 import (
 	"context"
+	"os"
 
+	"github.com/gogf/gf/v2/crypto/gmd5"
 	"github.com/gogf/gf/v2/frame/g"
 )
 
@@ -24,5 +26,8 @@ func (rec *xml) CustomWriter(ctx context.Context, data interface{}, status ...in
 	r.Response.ClearBuffer()
 	r.Response.WriteXml(data, "xml")
 	r.Response.Header().Set("Content-Type", "application/xml;charset=utf-8")
+	serverName, _ := os.Hostname()
+	serverId, _ := gmd5.Encrypt(serverName)
+	r.Response.Header().Set("Server-Id", serverId)
 	r.ExitAll()
 }
