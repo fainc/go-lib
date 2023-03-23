@@ -100,7 +100,7 @@ func SM2ReadPublicKeyFromPath(filePath string) (pub *sm2.PublicKey, err error) {
 	}
 	return
 }
-func SM2EncryptAsn1(pubPem, data, mode string) (cipherText string, err error) {
+func SM2EncryptAsn1(pubPem, data string, isHex bool) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -109,7 +109,7 @@ func SM2EncryptAsn1(pubPem, data, mode string) (cipherText string, err error) {
 	if err != nil {
 		return
 	}
-	if mode == "hex" {
+	if isHex {
 		return hex.EncodeToString(cipher), nil
 	}
 	return base64.StdEncoding.EncodeToString(cipher), nil
@@ -132,7 +132,7 @@ func SM2Encrypt(pubPem, data string, isHex bool, mode int) (cipherText string, e
 	return base64.StdEncoding.EncodeToString(cipher), nil
 
 }
-func SM2DecryptAsn1(priPem, pwd, data, mode string) (plainText string, err error) {
+func SM2DecryptAsn1(priPem, pwd, data string, isHex bool) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -143,14 +143,14 @@ func SM2DecryptAsn1(priPem, pwd, data, mode string) (plainText string, err error
 		return
 	}
 	var d []byte
-	if mode != "hex" {
-		d, err = base64.StdEncoding.DecodeString(data)
+	if isHex {
+		d, err = hex.DecodeString(data)
 		if err != nil {
 			err = errors.New("待解密数据处理失败")
 			return
 		}
 	} else {
-		d, err = hex.DecodeString(data)
+		d, err = base64.StdEncoding.DecodeString(data)
 		if err != nil {
 			err = errors.New("待解密数据处理失败")
 			return
@@ -166,7 +166,7 @@ func SM2DecryptAsn1(priPem, pwd, data, mode string) (plainText string, err error
 }
 
 // SM2Decrypt mode 0 C1C3C2 mode1 C1C2C3
-func SM2Decrypt(priPem, pwd, data, inFormat string, mode int) (plainText string, err error) {
+func SM2Decrypt(priPem, pwd, data string, isHex bool, mode int) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -177,20 +177,19 @@ func SM2Decrypt(priPem, pwd, data, inFormat string, mode int) (plainText string,
 		return
 	}
 	var d []byte
-	if inFormat != "hex" {
-		d, err = base64.StdEncoding.DecodeString(data)
-		if err != nil {
-			err = errors.New("待解密数据处理失败")
-			return
-		}
-	} else {
+	if isHex {
 		d, err = hex.DecodeString(data)
 		if err != nil {
 			err = errors.New("待解密数据处理失败")
 			return
 		}
+	} else {
+		d, err = base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			err = errors.New("待解密数据处理失败")
+			return
+		}
 	}
-
 	plain, err := sm2.Decrypt(pri, d, mode)
 	if err != nil {
 		err = errors.New("数据解密失败，请核对私钥证书是否正确")
@@ -201,7 +200,7 @@ func SM2Decrypt(priPem, pwd, data, inFormat string, mode int) (plainText string,
 
 // PrivateSign 签名 der编解码 sm3杂凑
 // 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
-func PrivateSign(priPem, pwd, data, outFormat string) (signStr string, err error) {
+func PrivateSign(priPem, pwd, data string, isHex bool) (signStr string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -216,7 +215,7 @@ func PrivateSign(priPem, pwd, data, outFormat string) (signStr string, err error
 		err = errors.New("签名失败，请检查私钥证书")
 		return
 	}
-	if outFormat == "hex" {
+	if isHex {
 		return hex.EncodeToString(sign), nil
 	}
 	return base64.StdEncoding.EncodeToString(sign), nil
@@ -227,14 +226,14 @@ func PrivateSign(priPem, pwd, data, outFormat string) (signStr string, err error
 //  sm2.doSignature("123", privateHex,{der:true,hash:true})
 // 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
 
-func PublicVerify(pubPem, data, sign, inFormat string) (ok bool, err error) {
+func PublicVerify(pubPem, data, sign string, isHex bool) (ok bool, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
 		return
 	}
 	var sd []byte
-	if inFormat == "hex" {
+	if isHex {
 		sd, err = hex.DecodeString(sign)
 		if err != nil {
 			err = errors.New("签名数据处理失败")
