@@ -58,7 +58,7 @@ func Base64ToPem(b, t string) (priPem string) {
 }
 
 // Encrypt PKCS1 加密 ,PKCS8证书 需要先转换格式
-func Encrypt(plainText, pub, format string) (cipherTextStr string, err error) {
+func Encrypt(plainText, pub string, isHex bool) (cipherTextStr string, err error) {
 	block, _ := pem.Decode([]byte(pub)) // 解码
 	if block == nil {
 		err = errors.New("public key error")
@@ -77,7 +77,7 @@ func Encrypt(plainText, pub, format string) (cipherTextStr string, err error) {
 		err = errors.New("rsa encrypt failed")
 		return
 	}
-	if format == "hex" {
+	if isHex {
 		return hex.EncodeToString(cipherText), nil
 	}
 	return base64.StdEncoding.EncodeToString(cipherText), nil

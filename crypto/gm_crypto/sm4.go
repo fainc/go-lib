@@ -2,6 +2,7 @@ package gm_crypto
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 
 	"github.com/tjfoc/gmsm/sm4"
@@ -22,19 +23,30 @@ func sm4Operate(key, data []byte, mode string, isEncrypt bool) (out []byte, err 
 	}
 	return
 }
-func SM4Encrypt(mode, key, data string) (outStr string, err error) {
+func SM4Encrypt(mode, key, data string, isHex bool) (outStr string, err error) {
 	out, err := sm4Operate([]byte(key), []byte(data), mode, true)
 	if err != nil {
 		return
 	}
-	outStr = base64.StdEncoding.EncodeToString(out)
-	return
+	if isHex {
+		return hex.EncodeToString(out), nil
+	}
+	return base64.StdEncoding.EncodeToString(out), nil
 }
-func SM4Decrypt(mode, key, data string) (outStr string, err error) {
-	db, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
-		err = errors.New("处理待解密数据失败")
-		return
+func SM4Decrypt(mode, key, data string, isHex bool) (outStr string, err error) {
+	var db []byte
+	if isHex {
+		db, err = hex.DecodeString(data)
+		if err != nil {
+			err = errors.New("处理待解密数据失败")
+			return
+		}
+	} else {
+		db, err = base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			err = errors.New("处理待解密数据失败")
+			return
+		}
 	}
 	out, err := sm4Operate([]byte(key), db, mode, false)
 	if err != nil {

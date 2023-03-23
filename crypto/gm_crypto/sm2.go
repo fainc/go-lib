@@ -117,7 +117,7 @@ func SM2EncryptAsn1(pubPem, data, mode string) (cipherText string, err error) {
 }
 
 // SM2Encrypt mode 0 C1C3C2 mode1 C1C2C3
-func SM2Encrypt(pubPem, data, outFormat string, mode int) (cipherText string, err error) {
+func SM2Encrypt(pubPem, data string, isHex bool, mode int) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -126,7 +126,7 @@ func SM2Encrypt(pubPem, data, outFormat string, mode int) (cipherText string, er
 	if err != nil {
 		return
 	}
-	if outFormat == "hex" {
+	if isHex {
 		return hex.EncodeToString(cipher), nil
 	}
 	return base64.StdEncoding.EncodeToString(cipher), nil

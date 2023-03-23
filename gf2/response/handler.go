@@ -79,42 +79,52 @@ func HandlerResponse(r *ghttp.Request) {
 			return
 		}
 	}
-	if res == nil { // 空数据时不处理加密
+	var (
+		encrypt = r.GetCtxVar("response_encrypt", false).Bool()
+	)
+	if !encrypt || res == nil { // CTX声明不加密或空数据时不处理加密，直接🔙
 		Json().Success(ctx, res)
 		return
 	}
 	var (
-		encrypt          = r.GetCtxVar("response_encrypt", false).Bool()
 		encryptAlgorithm = r.GetCtxVar("response_encrypt_algorithm", "").String()
-		encryptKey       = r.GetCtxVar("response_encrypt_key", "").String()
-		encryptFormat    = r.GetCtxVar("response_encrypt_format", "base64").String()
-		encryptSM2Mode   = r.GetCtxVar("response_encrypt_sm2_mode", 0).Int()
 	)
-	if encrypt && encryptAlgorithm != "" && encryptKey != "" {
-		switch encryptAlgorithm {
-		case "SM2":
-			res, err = gm_crypto.SM2Encrypt(encryptKey, gjson.MustEncodeString(res), encryptFormat, encryptSM2Mode)
-			if err != nil {
-				Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
-				return
-			}
-		case "SM4":
-			res, err = gm_crypto.SM4Encrypt(encryptKey, gjson.MustEncodeString(res), encryptFormat)
-			if err != nil {
-				Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
-				return
-			}
-		case "RSA_PKCS1":
-			res, err = rsa_crypto.Encrypt(gjson.MustEncodeString(res), encryptKey, encryptFormat)
-			if err != nil {
-				Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
-				return
-			}
-		default:
-			Json().InternalError(ctx, g.I18n().Translate(ctx, "UnsupportedEncryptAlgorithm"))
+	if encrypt && encryptAlgorithm == "" { // CTX加密算法为空
+		Json().InternalError(ctx, g.I18n().Translate(ctx, "UnsupportedEncryptAlgorithm"))
+		return
+	}
+	var (
+		encryptKey     = r.GetCtxVar("response_encrypt_key", "").String()
+		encryptHex     = r.GetCtxVar("response_encrypt_hex", false).Bool() // 是否使用hex，否则输出base64
+		encryptSM2Mode = r.GetCtxVar("response_encrypt_sm2_mode", 0).Int()
+		encryptSM4Mode = r.GetCtxVar("response_encrypt_sm4_mode", "ECB").String()
+	)
+	if encryptKey == "" { // CTX加密密钥/证书为空
+		Json().InternalError(ctx, g.I18n().Translate(ctx, "EncryptKeyError"))
+		return
+	}
+	switch encryptAlgorithm {
+	case "SM2":
+		res, err = gm_crypto.SM2Encrypt(encryptKey, gjson.MustEncodeString(res), encryptHex, encryptSM2Mode)
+		if err != nil {
+			Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
 			return
 		}
-
+	case "SM4":
+		res, err = gm_crypto.SM4Encrypt(encryptSM4Mode, encryptKey, gjson.MustEncodeString(res), encryptHex)
+		if err != nil {
+			Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
+			return
+		}
+	case "RSA_PKCS1":
+		res, err = rsa_crypto.Encrypt(gjson.MustEncodeString(res), encryptKey, encryptHex)
+		if err != nil {
+			Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
+			return
+		}
+	default:
+		Json().InternalError(ctx, g.I18n().Translate(ctx, "UnsupportedEncryptAlgorithm"))
+		return
 	}
 	Json(JsonOptions{
 		Encrypt:          encrypt,
