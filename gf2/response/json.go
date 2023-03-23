@@ -10,12 +10,22 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 )
 
-type json struct{}
+type json struct {
+	JsonOptions
+}
 
-var jsonVar = json{}
+// var jsonVar = json{}
 
-func Json() *json {
-	return &jsonVar
+type JsonOptions struct {
+	Encrypt          bool
+	EncryptAlgorithm string
+}
+
+func Json(options ...JsonOptions) *json {
+	if len(options) == 0 {
+		return &json{}
+	}
+	return &json{options[0]}
 }
 
 func (rec *json) Success(ctx context.Context, data interface{}) {
@@ -44,13 +54,15 @@ func (rec *json) NotFoundError(ctx context.Context, message string) {
 }
 
 type JsonFormat struct {
-	Code      int         `json:"code"`      // 业务码，用于业务判断（首选），固定 200/400/401/404/500，与http状态码同步，通常取该值判断是否有错误需要处理
-	ErrorCode int         `json:"errorCode"` // 错误码，用于业务判断（可选），-1/400(通用错误)/51(参数验证错误)/401/404/500/other，通常忽略该值，除非业务需要判断详细错误类型（例：交易场景，交易失败返回400业务码时，返回余额不足、账户冻结等详细错误码用于后续业务处理）
-	Message   interface{} `json:"message"`   // 消息，业务码非400时固定输出 Success/Authorization/NotFound/InternalError中的一种，400时输出详细错误（可能含i18n转译，建议仅展示或记录信息，不可用于业务判断）
-	Data      interface{} `json:"data"`      // 返回数据
-	Runtime   int64       `json:"runtime"`   // 当前任务执行耗时（ms）
-	Lang      string      `json:"lang"`      // 当前上下文语言
-	Ext       interface{} `json:"ext"`       // 拓展数据（可能含有多个错误详情或其他附加数据，例：复杂登录场景下的401错误返回具体登录地址）
+	Code      int         `json:"code"`                // 业务码，用于业务判断（首选），固定 200/400/401/404/500，与http状态码同步，通常取该值判断是否有错误需要处理
+	ErrorCode int         `json:"errorCode"`           // 错误码，用于业务判断（可选），-1/400(通用错误)/51(参数验证错误)/401/404/500/other，通常忽略该值，除非业务需要判断详细错误类型（例：交易场景，交易失败返回400业务码时，返回余额不足、账户冻结等详细错误码用于后续业务处理）
+	Message   interface{} `json:"message"`             // 消息，业务码非400时固定输出 Success/Authorization/NotFound/InternalError中的一种，400时输出详细错误（可能含i18n转译，建议仅展示或记录信息，不可用于业务判断）
+	Data      interface{} `json:"data"`                // 返回数据
+	Runtime   int64       `json:"runtime"`             // 当前任务执行耗时（ms）
+	Lang      string      `json:"lang"`                // 当前上下文语言
+	Ext       interface{} `json:"ext"`                 // 拓展数据（可能含有多个错误详情或其他附加数据，例：复杂登录场景下的401错误返回具体登录地址）
+	Encrypted bool        `json:"encrypted"`           // 数据是否加密
+	Algorithm string      `json:"algorithm,omitempty"` // 数据加密算法
 }
 
 // Writer 标准格式数据输出
@@ -68,6 +80,8 @@ func (rec *json) Writer(ctx context.Context, data interface{}, message string, c
 		Lang:      gi18n.LanguageFromCtx(ctx),
 		ErrorCode: errCode,
 		Runtime:   gtime.Now().TimestampMilli() - r.EnterTime,
+		Encrypted: rec.Encrypt,
+		Algorithm: rec.EncryptAlgorithm,
 	})
 	r.Response.Header().Set("Content-Type", "application/json;charset=utf-8")
 	r.Response.Header().Set("Server-Id", serverId)

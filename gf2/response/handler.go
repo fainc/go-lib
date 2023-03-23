@@ -3,11 +3,15 @@ package response
 import (
 	"net/http"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
+
+	"github.com/fainc/go-lib/crypto/gm_crypto"
+	"github.com/fainc/go-lib/crypto/rsa_crypto"
 )
 
 // HandlerResponse 默认数据返回中间件
@@ -75,6 +79,45 @@ func HandlerResponse(r *ghttp.Request) {
 			return
 		}
 	}
+	if res == nil { // 空数据时不处理加密
+		Json().Success(ctx, res)
+		return
+	}
+	var (
+		encrypt          = r.GetCtxVar("response_encrypt", false).Bool()
+		encryptAlgorithm = r.GetCtxVar("response_encrypt_algorithm", "").String()
+		encryptKey       = r.GetCtxVar("response_encrypt_key", "").String()
+		encryptFormat    = r.GetCtxVar("response_encrypt_format", "base64").String()
+		encryptSM2Mode   = r.GetCtxVar("response_encrypt_sm2_mode", 0).Int()
+	)
+	if encrypt && encryptAlgorithm != "" && encryptKey != "" {
+		switch encryptAlgorithm {
+		case "SM2":
+			res, err = gm_crypto.SM2Encrypt(encryptKey, gjson.MustEncodeString(res), encryptFormat, encryptSM2Mode)
+			if err != nil {
+				Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
+				return
+			}
+		case "SM4":
+			res, err = gm_crypto.SM4Encrypt(encryptKey, gjson.MustEncodeString(res), encryptFormat)
+			if err != nil {
+				Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
+				return
+			}
+		case "RSA_PKCS1":
+			res, err = rsa_crypto.Encrypt(gjson.MustEncodeString(res), encryptKey, encryptFormat)
+			if err != nil {
+				Json().InternalError(ctx, g.I18n().Translate(ctx, "DataEncryptFailed"))
+				return
+			}
+		default:
+			Json().InternalError(ctx, g.I18n().Translate(ctx, "UnsupportedEncryptAlgorithm"))
+			return
+		}
 
-	Json().Success(ctx, res)
+	}
+	Json(JsonOptions{
+		Encrypt:          encrypt,
+		EncryptAlgorithm: encryptAlgorithm,
+	}).Success(ctx, res)
 }

@@ -100,7 +100,7 @@ func SM2ReadPublicKeyFromPath(filePath string) (pub *sm2.PublicKey, err error) {
 	}
 	return
 }
-func EncryptAsn1(pubPem, data, mode string) (cipherText string, err error) {
+func SM2EncryptAsn1(pubPem, data, mode string) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -116,8 +116,8 @@ func EncryptAsn1(pubPem, data, mode string) (cipherText string, err error) {
 
 }
 
-// Encrypt mode 0 C1C3C2 mode1 C1C2C3
-func Encrypt(pubPem, data, outFormat string, mode int) (cipherText string, err error) {
+// SM2Encrypt mode 0 C1C3C2 mode1 C1C2C3
+func SM2Encrypt(pubPem, data, outFormat string, mode int) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -132,7 +132,7 @@ func Encrypt(pubPem, data, outFormat string, mode int) (cipherText string, err e
 	return base64.StdEncoding.EncodeToString(cipher), nil
 
 }
-func DecryptAsn1(priPem, pwd, data, mode string) (plainText string, err error) {
+func SM2DecryptAsn1(priPem, pwd, data, mode string) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -165,8 +165,8 @@ func DecryptAsn1(priPem, pwd, data, mode string) (plainText string, err error) {
 	return string(plain), nil
 }
 
-// Decrypt mode 0 C1C3C2 mode1 C1C2C3
-func Decrypt(priPem, pwd, data, inFormat string, mode int) (plainText string, err error) {
+// SM2Decrypt mode 0 C1C3C2 mode1 C1C2C3
+func SM2Decrypt(priPem, pwd, data, inFormat string, mode int) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)

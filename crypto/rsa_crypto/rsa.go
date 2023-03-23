@@ -5,11 +5,12 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/pem"
 	"errors"
 )
 
-func gen(bits int) (x509PrivateKey []byte, X509PublicKey []byte, err error) {
+func gen(bits int) (x509PrivateKey, X509PublicKey []byte, err error) {
 	// 生成私钥文件
 	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
@@ -23,7 +24,7 @@ func gen(bits int) (x509PrivateKey []byte, X509PublicKey []byte, err error) {
 }
 
 // Generate 生成RSA PKCS1 密钥对 不带格式化 解密使用时需要先调用Base64ToPem转换格式
-func Generate(bits int) (pri string, pub string, err error) {
+func Generate(bits int) (pri, pub string, err error) {
 	x509PrivateKey, X509PublicKey, err := gen(bits)
 	pri = base64.StdEncoding.EncodeToString(x509PrivateKey)
 	pub = base64.StdEncoding.EncodeToString(X509PublicKey)
@@ -51,13 +52,13 @@ func formatKey(b []byte, t string) (priPem string) {
 }
 
 // Base64ToPem base64 未格式化密钥转pem格式 t = RSA PUBLIC KEY \ RSA PRIVATE KEY
-func Base64ToPem(b string, t string) (priPem string) {
+func Base64ToPem(b, t string) (priPem string) {
 	d, _ := base64.StdEncoding.DecodeString(b)
 	return formatKey(d, t)
 }
 
 // Encrypt PKCS1 加密 ,PKCS8证书 需要先转换格式
-func Encrypt(plainText string, pub string) (cipherTextStr string, err error) {
+func Encrypt(plainText, pub, format string) (cipherTextStr string, err error) {
 	block, _ := pem.Decode([]byte(pub)) // 解码
 	if block == nil {
 		err = errors.New("public key error")
@@ -76,11 +77,14 @@ func Encrypt(plainText string, pub string) (cipherTextStr string, err error) {
 		err = errors.New("rsa encrypt failed")
 		return
 	}
+	if format == "hex" {
+		return hex.EncodeToString(cipherText), nil
+	}
 	return base64.StdEncoding.EncodeToString(cipherText), nil
 }
 
 // Decrypt PKCS1 解密 ,PKCS8证书 需要先转换格式
-func Decrypt(ciphertext string, pri string) (res string, err error) {
+func Decrypt(ciphertext, pri, format string) (res string, err error) {
 	block, _ := pem.Decode([]byte(pri))
 	if block == nil {
 		err = errors.New("private key error")
@@ -93,10 +97,19 @@ func Decrypt(ciphertext string, pri string) (res string, err error) {
 		return
 	}
 	// 解密
-	decodeString, err := base64.StdEncoding.DecodeString(ciphertext)
-	if err != nil {
-		return
+	var decodeString []byte
+	if format == "hex" {
+		decodeString, err = hex.DecodeString(ciphertext)
+		if err != nil {
+			return
+		}
+	} else {
+		decodeString, err = base64.StdEncoding.DecodeString(ciphertext)
+		if err != nil {
+			return
+		}
 	}
+
 	b, err := rsa.DecryptPKCS1v15(rand.Reader, priKey, decodeString)
 	if err != nil {
 		err = errors.New("rsa decrypt failed")
