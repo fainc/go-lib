@@ -1,17 +1,14 @@
 package wechat_payment_v1
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"sort"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/fainc/go-lib/crypto/md5_crypto"
+	"github.com/fainc/go-lib/helper/str_helper"
 )
 
 type utils struct{}
@@ -24,29 +21,15 @@ func Utils() *utils {
 
 // GetNonceStr 获取随机字符串
 func (rec *utils) GetNonceStr() string {
-	u1 := uuid.NewString()
-	return strings.ToUpper(strings.ReplaceAll(u1, "-", ""))
+	return str_helper.NonceStr()
 }
 
 // GetSign 微信支付统一签名方法
 func (rec *utils) GetSign(p []byte, key string) string {
 	var m map[string]string
 	_ = json.Unmarshal(p, &m)
-	keys := make([]string, 0)
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys) // 对键进行排序
-	var str string
-	for _, v := range keys {
-		if v != "sign" && v != "paySign" {
-			str = str + v + "=" + m[v] + "&"
-		}
-	}
-	str = str + "key=" + key
-	h := md5.New()
-	h.Write([]byte(str))
-	return strings.ToUpper(hex.EncodeToString(h.Sum(nil)))
+	str := str_helper.SignatureStr(m, &str_helper.SignatureStrKeyOptions{Key: "key", Value: key}, []string{"sign", "paySign"})
+	return md5_crypto.Md5(str, true)
 }
 
 type PaymentRawNotify struct {

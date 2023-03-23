@@ -2,9 +2,8 @@ package wechat_sdk
 
 import (
 	"errors"
-	"strings"
 
-	"github.com/google/uuid"
+	"github.com/fainc/go-lib/helper/str_helper"
 )
 
 type utils struct{}
@@ -17,8 +16,7 @@ func Utils() *utils {
 
 // GetNonceStr 获取随机字符串
 func (rec *utils) GetNonceStr() string {
-	u1 := uuid.NewString()
-	return strings.ToUpper(strings.ReplaceAll(u1, "-", ""))
+	return str_helper.NonceStr()
 }
 
 // DownloadPathCheck 文件下载路径检查
