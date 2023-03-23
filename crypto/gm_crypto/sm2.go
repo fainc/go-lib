@@ -23,8 +23,8 @@ func sm2generateKey() (key *sm2.PrivateKey, err error) {
 	return
 }
 
-// SM2GenerateKeyPem 生成带格式的国密 SM2 密钥
-func SM2GenerateKeyPem(pwd string) (pri, pub, priHex, pubHex string, err error) {
+// SM2GenerateKey 生成国密 SM2 密钥
+func SM2GenerateKey(pwd string) (pri, pub, priHex, pubHex string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
