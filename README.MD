@@ -1,4 +1,4 @@
-# Go Lib V2
+# Go Lib Golang 常用操作库实用化封装
 
 - `aliyun-oss`: 阿里云OSS对象存储 
 - `aliyun-sms`: 阿里云短信
