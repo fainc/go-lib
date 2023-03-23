@@ -1,4 +1,4 @@
-package wechat_payment_v2
+package wechat_payment_v1
 
 import (
 	"crypto/md5"
