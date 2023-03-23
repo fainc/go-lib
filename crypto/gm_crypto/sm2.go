@@ -24,7 +24,7 @@ func sm2generateKey() (key *sm2.PrivateKey, err error) {
 }
 
 // SM2GenerateKeyPem 生成带格式的国密 SM2 密钥
-func SM2GenerateKeyPem(pwd string) (pri, pub string, priHex, pubHex string, err error) {
+func SM2GenerateKeyPem(pwd string) (pri, pub, priHex, pubHex string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -56,7 +56,7 @@ func SM2GenerateKeyPem(pwd string) (pri, pub string, priHex, pubHex string, err 
 	return
 }
 
-func SM2ReadPrivateKeyFromPem(priPem string, password string) (pri *sm2.PrivateKey, err error) {
+func SM2ReadPrivateKeyFromPem(priPem, password string) (pri *sm2.PrivateKey, err error) {
 	pri, err = x509.ReadPrivateKeyFromPem([]byte(priPem), []byte(password))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
@@ -64,7 +64,7 @@ func SM2ReadPrivateKeyFromPem(priPem string, password string) (pri *sm2.PrivateK
 	}
 	return
 }
-func SM2ReadPrivateKeyFromPath(filePath string, password string) (pri *sm2.PrivateKey, err error) {
+func SM2ReadPrivateKeyFromPath(filePath, password string) (pri *sm2.PrivateKey, err error) {
 	f, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		err = errors.New("读取密钥证书文件失败")
@@ -100,7 +100,7 @@ func SM2ReadPublicKeyFromPath(filePath string) (pub *sm2.PublicKey, err error) {
 	}
 	return
 }
-func EncryptAsn1(pubPem string, data string, mode string) (cipherText string, err error) {
+func EncryptAsn1(pubPem, data, mode string) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -117,7 +117,7 @@ func EncryptAsn1(pubPem string, data string, mode string) (cipherText string, er
 }
 
 // Encrypt mode 0 C1C3C2 mode1 C1C2C3
-func Encrypt(pubPem string, data string, outFormat string, mode int) (cipherText string, err error) {
+func Encrypt(pubPem, data, outFormat string, mode int) (cipherText string, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -132,7 +132,7 @@ func Encrypt(pubPem string, data string, outFormat string, mode int) (cipherText
 	return base64.StdEncoding.EncodeToString(cipher), nil
 
 }
-func DecryptAsn1(priPem string, pwd string, data string, mode string) (plainText string, err error) {
+func DecryptAsn1(priPem, pwd, data, mode string) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -165,7 +165,8 @@ func DecryptAsn1(priPem string, pwd string, data string, mode string) (plainText
 	return string(plain), nil
 }
 
-func Decrypt(priPem string, pwd string, data string, inFormat string, mode int) (plainText string, err error) {
+// Decrypt mode 0 C1C3C2 mode1 C1C2C3
+func Decrypt(priPem, pwd, data, inFormat string, mode int) (plainText string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -200,7 +201,7 @@ func Decrypt(priPem string, pwd string, data string, inFormat string, mode int) 
 
 // PrivateSign 签名 der编解码 sm3杂凑
 // 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
-func PrivateSign(priPem string, pwd string, data string, mode string) (signStr string, err error) {
+func PrivateSign(priPem, pwd, data, outFormat string) (signStr string, err error) {
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -215,7 +216,7 @@ func PrivateSign(priPem string, pwd string, data string, mode string) (signStr s
 		err = errors.New("签名失败，请检查私钥证书")
 		return
 	}
-	if mode == "hex" {
+	if outFormat == "hex" {
 		return hex.EncodeToString(sign), nil
 	}
 	return base64.StdEncoding.EncodeToString(sign), nil
@@ -226,7 +227,7 @@ func PrivateSign(priPem string, pwd string, data string, mode string) (signStr s
 //  sm2.doSignature("123", privateHex,{der:true,hash:true})
 // 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
 
-func PublicVerify(pubPem string, data string, sign string, inFormat string) (ok bool, err error) {
+func PublicVerify(pubPem, data, sign, inFormat string) (ok bool, err error) {
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")
