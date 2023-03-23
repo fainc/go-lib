@@ -247,6 +247,6 @@ func PublicVerify(pubPem, data, sign, inFormat string) (ok bool, err error) {
 			return
 		}
 	}
-	ok = pub.Verify([]byte(data), sd) // sm2签名
+	ok = pub.Verify([]byte(data), sd) // sm2验签
 	return
 }

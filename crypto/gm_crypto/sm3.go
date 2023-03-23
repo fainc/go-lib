@@ -1,6 +1,7 @@
 package gm_crypto
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"io/ioutil"
@@ -9,16 +10,21 @@ import (
 	"github.com/tjfoc/gmsm/sm3"
 )
 
-func SM3Sum(data string, salt string, toUpper bool) string {
+func SM3Sum(data string, salt ...string) (hex, bs64 string) {
 	h := sm3.New()
-	h.Write([]byte(data + salt))
-	sum := h.Sum(nil)
-	if toUpper {
-		return strings.ToUpper(hex.EncodeToString(sum))
+	str := data
+	if len(salt) >= 1 {
+		str = str + salt[0]
 	}
-	return hex.EncodeToString(sum)
+	h.Write([]byte(str))
+	sum := h.Sum(nil)
+	return formatRet(sum)
 }
-func SM3FileSum(filePath string, toUpper bool) (ret string, err error) {
+
+func formatRet(sum []byte) (hexStr, bs64 string) {
+	return strings.ToUpper(hex.EncodeToString(sum)), base64.StdEncoding.EncodeToString(sum)
+}
+func SM3FileSum(filePath string) (hex, bs64 string, err error) {
 	f, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		err = errors.New("SM3FileSum 读取文件失败")
@@ -27,8 +33,6 @@ func SM3FileSum(filePath string, toUpper bool) (ret string, err error) {
 	h := sm3.New()
 	h.Write(f)
 	sum := h.Sum(nil)
-	if toUpper {
-		return strings.ToUpper(hex.EncodeToString(sum)), nil
-	}
-	return hex.EncodeToString(sum), nil
+	hex, bs64 = formatRet(sum)
+	return
 }

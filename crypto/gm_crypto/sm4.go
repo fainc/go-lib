@@ -7,7 +7,7 @@ import (
 	"github.com/tjfoc/gmsm/sm4"
 )
 
-func sm4Operate(key []byte, data []byte, mode string, isEncrypt bool) (out []byte, err error) {
+func sm4Operate(key, data []byte, mode string, isEncrypt bool) (out []byte, err error) {
 	switch mode {
 	case "ECB":
 		out, err = sm4.Sm4Ecb(key, data, isEncrypt)
@@ -22,24 +22,21 @@ func sm4Operate(key []byte, data []byte, mode string, isEncrypt bool) (out []byt
 	}
 	return
 }
-func SM4Encrypt(mode string, key string, data string) (outStr string, err error) {
-	kb := []byte(key)
-	db := []byte(data)
-	out, err := sm4Operate(kb, db, mode, true)
+func SM4Encrypt(mode, key, data string) (outStr string, err error) {
+	out, err := sm4Operate([]byte(key), []byte(data), mode, true)
 	if err != nil {
 		return
 	}
 	outStr = base64.StdEncoding.EncodeToString(out)
 	return
 }
-func SM4Decrypt(mode string, key string, data string) (outStr string, err error) {
-	kb := []byte(key)
+func SM4Decrypt(mode, key, data string) (outStr string, err error) {
 	db, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		err = errors.New("处理待解密数据失败")
 		return
 	}
-	out, err := sm4Operate(kb, db, mode, false)
+	out, err := sm4Operate([]byte(key), db, mode, false)
 	if err != nil {
 		return
 	}
