@@ -51,8 +51,8 @@ func SM2GenerateKeyPem(pwd string) (pri, pub, priHex, pubHex string, err error) 
 
 	// 私钥 hex
 	priHex = hex.EncodeToString(key.D.Bytes())
-	// 公钥 hex（如需要04标识请自行添加）
-	pubHex = hex.EncodeToString(pubKey.X.Bytes()) + hex.EncodeToString(pubKey.Y.Bytes())
+	// 公钥 hex（如需移除04软件标识请自行处理）
+	pubHex = "04" + hex.EncodeToString(pubKey.X.Bytes()) + hex.EncodeToString(pubKey.Y.Bytes())
 	return
 }
 
