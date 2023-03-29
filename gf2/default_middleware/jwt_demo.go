@@ -12,16 +12,17 @@ import (
 // JwtUserAuth this is a jwt middleware demo
 func JwtUserAuth(r *ghttp.Request) {
 	inWhiteTables := garray.NewStrArrayFrom(g.SliceStr{"/account/login"}).ContainsI(r.RequestURI)
-	userId, scope, claims, err := jwt.Helper.StandardAuth(r, g.SliceStr{
+	userId, scope, id, claims, err := jwt.Helper.StandardAuth(r, g.SliceStr{
 		"scope",
 	}, "secret")
 	if err != nil && !inWhiteTables {
 		response.Json().UnAuthorizedError(r.Context(), err.Error(), nil)
-		return // return 后下个中间件不执行
+		return
 	}
 	g.Dump(claims)
 	g.Dump(scope)
 	g.Dump(userId)
+	g.Dump(id)
 	g.Dump(inWhiteTables)
 	r.Middleware.Next()
 }
