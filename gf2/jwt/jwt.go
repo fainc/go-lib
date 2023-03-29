@@ -27,7 +27,7 @@ type ParseParams struct {
 }
 
 // Parse jwt解析
-func (*jwtHelper) Parse(params ParseParams) (uuid int, scope, id string, claims jwt.MapClaims, err error) {
+func (*jwtHelper) Parse(params ParseParams) (userId int, scope, id string, claims jwt.MapClaims, err error) {
 	if params.Secret == "" {
 		err = errors.New("jwt secret invalid")
 		return
@@ -57,8 +57,8 @@ func (*jwtHelper) Parse(params ParseParams) (uuid int, scope, id string, claims 
 		err = errors.New(err.Error())
 		return
 	}
-	uuidStr := claims["uuid"]
-	if uuidStr == nil {
+	userIdStr := claims["userId"]
+	if userIdStr == nil {
 		err = errors.New("signature user key invalid")
 		return
 	}
@@ -69,29 +69,33 @@ func (*jwtHelper) Parse(params ParseParams) (uuid int, scope, id string, claims 
 		return
 	}
 	idStr := claims["jti"]
-	return gconv.Int(uuidStr), gconv.String(scopeStr), gconv.String(idStr), claims, nil
+	if idStr == nil {
+		err = errors.New("jti invalid")
+		return
+	}
+	return gconv.Int(userIdStr), gconv.String(scopeStr), gconv.String(idStr), claims, nil
 }
 
 type GenerateParams struct {
-	Uuid      int           // * 非0用户ID
+	UserId    int           // * 非0用户ID
 	Scope     string        // * 授权scope标志
 	Duration  time.Duration // * 授权时长
 	Secret    string        // * jwt及加密密钥
-	Id        string        // * 唯一标识，为空时使用uuid
+	Id        string        // * 唯一标识，为空时使用随机uuid xxxx-xxxx-xxxx-xxx
 	NotBefore *time.Time    // * 生效时间 nil时使用now
 }
 
 // Generate 生成jwt
 func (*jwtHelper) Generate(params GenerateParams) (string, error) {
-	if params.Uuid == 0 || params.Scope == "" || params.Duration == 0 || params.Secret == "" {
+	if params.UserId == 0 || params.Scope == "" || params.Duration == 0 || params.Secret == "" {
 		return "", errors.New("generate jwt params invalid")
 	}
 	if params.Id == "" {
 		params.Id = str_helper.UuidStr()
 	}
 	type MyCustomClaims struct {
-		Uuid  int    `json:"uuid"`
-		Scope string `json:"scope"`
+		UserId int    `json:"userId"`
+		Scope  string `json:"scope"`
 		jwt.RegisteredClaims
 	}
 	nbf := time.Now()
@@ -99,7 +103,7 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 		nbf = *params.NotBefore
 	}
 	claims := MyCustomClaims{
-		params.Uuid,
+		params.UserId,
 		params.Scope,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(params.Duration)),
@@ -115,8 +119,8 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 }
 
 // StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发)
-func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, secret string) (uuid int, scope, id string, claims jwt.MapClaims, err error) {
-	uuid, scope, id, claims, err = rec.Parse(ParseParams{
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, secret string) (userId int, scope, id string, claims jwt.MapClaims, err error) {
+	userId, scope, id, claims, err = rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
 		Scopes: scopes,
 		Secret: secret,
@@ -125,23 +129,21 @@ func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, secret s
 		scope = "UNKNOWN"
 		return
 	}
-	r.SetCtxVar("UUID", uuid)
-	r.SetCtxVar("SCOPE", scope)
+	r.SetCtxVar("JWT_USER_ID", userId)
+	r.SetCtxVar("JWT_SCOPE", scope)
 	return
 }
 
-type user struct {
-	UUID  int
+type jwtUser struct {
+	ID    int
 	SCOPE string
 }
 
-// GetUser 获取当前用户信息
-func (*jwtHelper) GetUser(ctx context.Context) *user {
-	r := g.RequestFromCtx(ctx) // 从Ctx中获取Request对象
-	UUID := r.GetCtxVar("UUID", 0)
-	SCOPE := r.GetCtxVar("SCOPE", "UNKNOWN")
-	return &user{
-		UUID:  gconv.Int(UUID),
-		SCOPE: gconv.String(SCOPE),
+// GetCtxUser 获取CTX用户信息
+func (*jwtHelper) GetCtxUser(ctx context.Context) jwtUser {
+	r := g.RequestFromCtx(ctx)
+	return jwtUser{
+		ID:    gconv.Int(r.GetCtxVar("JWT_USER_ID", 0)),
+		SCOPE: gconv.String(r.GetCtxVar("JWT_SCOPE", "UNKNOWN")),
 	}
 }
