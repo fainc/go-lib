@@ -12,6 +12,8 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/golang-jwt/jwt/v4"
+
+	"github.com/fainc/go-lib/helper/str_helper"
 )
 
 var Helper = jwtHelper{}
@@ -71,11 +73,12 @@ func (*jwtHelper) Parse(params ParseParams) (uuid int, scope, id string, claims 
 }
 
 type GenerateParams struct {
-	Uuid     int           // * 非0用户ID
-	Scope    string        // * 授权scope标志
-	Duration time.Duration // * 授权时长
-	Secret   string        // * jwt及加密密钥
-	Id       string
+	Uuid      int           // * 非0用户ID
+	Scope     string        // * 授权scope标志
+	Duration  time.Duration // * 授权时长
+	Secret    string        // * jwt及加密密钥
+	Id        string        // * 唯一标识，为空时使用uuid
+	NotBefore *time.Time    // * 生效时间 nil时使用now
 }
 
 // Generate 生成jwt
@@ -83,11 +86,17 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 	if params.Uuid == 0 || params.Scope == "" || params.Duration == 0 || params.Secret == "" {
 		return "", errors.New("generate jwt params invalid")
 	}
-
+	if params.Id == "" {
+		params.Id = str_helper.UuidStr()
+	}
 	type MyCustomClaims struct {
 		Uuid  int    `json:"uuid"`
 		Scope string `json:"scope"`
 		jwt.RegisteredClaims
+	}
+	nbf := time.Now()
+	if params.NotBefore != nil {
+		nbf = *params.NotBefore
 	}
 	claims := MyCustomClaims{
 		params.Uuid,
@@ -95,7 +104,7 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(params.Duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(nbf),
 			Issuer:    "jwtHelper",
 			ID:        params.Id,
 		},
