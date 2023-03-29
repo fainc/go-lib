@@ -74,6 +74,7 @@ type GenerateParams struct {
 	Scope    string        // * 授权scope标志
 	Duration time.Duration // * 授权时长
 	Secret   string        // * jwt及加密密钥
+	Id       string
 }
 
 // Generate 生成jwt
@@ -95,6 +96,7 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "jwtHelper",
+			ID:        params.Id,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

@@ -79,10 +79,16 @@ func HandlerResponse(r *ghttp.Request) {
 			return
 		}
 	}
+
+	/*CTX判断是否加密 etc.*/
+	// r.SetCtxVar("response_encrypt", true)
+	// r.SetCtxVar("response_encrypt_algorithm", cert.Algorithm)
+	// r.SetCtxVar("response_encrypt_key", cert.Public)
+	// r.SetCtxVar("response_encrypt_hex", true)
 	var (
 		encrypt = r.GetCtxVar("response_encrypt", false).Bool()
 	)
-	if !encrypt || res == nil { // CTX声明不加密或空数据时不处理加密，直接🔙
+	if !encrypt || res == nil { // CTX声明不加密或空数据时不处理加密，直接返回
 		Json().Success(ctx, res)
 		return
 	}

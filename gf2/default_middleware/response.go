@@ -10,7 +10,3 @@ func HandlerResponse(r *ghttp.Request) {
 	r.Middleware.Next()
 	response.HandlerResponse(r)
 }
-func HandlerEncryptResponse(r *ghttp.Request) {
-	r.Middleware.Next()
-	response.HandlerResponse(r)
-}
