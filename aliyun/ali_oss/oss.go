@@ -40,7 +40,6 @@ type SignUrlParams struct {
 	Timeout         int64  // 说明 出于安全考虑，OSS控制台中默认URL的有效时间为3600秒，最大值为32400秒
 	ForbidOverWrite bool
 	ContentType     string
-	ContentLength   int64  // 限制 PUT ContentLength，请求头ContentLength必须和声明的一致，可用于限制文件最大值（实际文件大小大于声明ContentLength时，多余的数据会被丢弃）
 	ContentMd5      string // 用于检查消息内容是否与发送时一致，为空不检查
 }
 
@@ -122,13 +121,7 @@ func (s *ossService) CreateSignedPutUrl(params *SignUrlParams) (signedURL string
 	options := []oss.Option{
 		oss.ObjectACL(oss.ACLType(params.ACL)),
 		oss.ContentType(params.ContentType),
-		oss.ResponseContentType("application/json;charset=utf-8"),
 		oss.ForbidOverWrite(params.ForbidOverWrite),
-	}
-	if params.ContentLength != 0 {
-		options = append(options, []oss.Option{
-			oss.ContentLength(params.ContentLength),
-		}...)
 	}
 	if params.ContentMd5 != "" {
 		options = append(options, []oss.Option{
