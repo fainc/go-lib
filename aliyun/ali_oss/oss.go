@@ -36,9 +36,10 @@ type DownloadParams struct {
 
 type SignUrlParams struct {
 	*BaseParams
-	ACL         string // (可选)上传时权限控制参数
-	Timeout     int64
-	ContentType string
+	ACL           string // (可选)上传时权限控制参数
+	Timeout       int64  // 说明 出于安全考虑，OSS控制台中默认URL的有效时间为3600秒，最大值为32400秒
+	ContentType   string
+	ContentLength int64 // 限制 ContentLength， 如果请求头中的Content-Length值小于实际请求体中传输的数据大小，OSS仍将成功创建Object，但Object的大小只能等于Content-Length中定义的大小，其他数据将被丢弃。
 }
 
 type ListObjectsParams struct {
@@ -121,23 +122,12 @@ func (s *ossService) CreateSignedPutUrl(params *SignUrlParams) (signedURL string
 		oss.ContentType(params.ContentType),
 		oss.ResponseContentType("json"),
 	}
+	if params.ContentLength != 0 {
+		options = append(options, []oss.Option{
+			oss.ContentLength(params.ContentLength),
+		}...)
+	}
 	signedURL, err = bucket.SignURL(params.ObjectKey, oss.HTTPPut, params.Timeout, options...)
-	if err != nil {
-		return "", errors.New("OSS签名授权失败，错误信息：" + err.Error())
-	}
-	return
-}
-func (s *ossService) CreateSignedPostUrl(params *SignUrlParams) (signedURL string, err error) {
-	bucket, err := s.InitBucket(params.Endpoint, params.AccessKeyId, params.AccessKeySecret, params.UseCname, params.Bucket)
-	if err != nil {
-		return "", err
-	}
-	options := []oss.Option{
-		oss.ObjectACL(oss.ACLType(params.ACL)),
-		oss.ContentType(params.ContentType),
-		oss.ResponseContentType("json"),
-	}
-	signedURL, err = bucket.SignURL(params.ObjectKey, oss.HTTPPost, params.Timeout, options...)
 	if err != nil {
 		return "", errors.New("OSS签名授权失败，错误信息：" + err.Error())
 	}
