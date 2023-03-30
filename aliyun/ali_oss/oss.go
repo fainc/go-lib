@@ -39,7 +39,7 @@ type SignUrlParams struct {
 	ACL           string // (可选)上传时权限控制参数
 	Timeout       int64  // 说明 出于安全考虑，OSS控制台中默认URL的有效时间为3600秒，最大值为32400秒
 	ContentType   string
-	ContentLength int64 // 限制 ContentLength， 如果请求头中的Content-Length值小于实际请求体中传输的数据大小，OSS仍将成功创建Object，但Object的大小只能等于Content-Length中定义的大小，其他数据将被丢弃。
+	ContentLength int64 // 限制PUT ContentLength，请求头ContentLength必须和声明的一致，可用于限制文件最大值（实际文件大小大于声明ContentLength时，多余的数据会被丢弃）
 }
 
 type ListObjectsParams struct {
