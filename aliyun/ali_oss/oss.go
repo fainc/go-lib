@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+
+	"github.com/fainc/go-lib/helper/str_helper"
 )
 
 var Service = ossService{}
@@ -176,9 +178,9 @@ func (s *ossService) DeleteObjects(params *DeleteObjectsParams) (err error) {
 	return
 }
 
-// GetRandomKey 随机文件名 //todo
+// GetRandomKey 随机文件名
 func (s *ossService) GetRandomKey(prefix string, filename string, suffix string) string {
-	randomKey := ""
+	randomKey := str_helper.UuidStr()
 	return prefix + randomKey + "." + suffix
 }
 
