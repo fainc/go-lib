@@ -179,13 +179,13 @@ func (s *ossService) DeleteObjects(params *DeleteObjectsParams) (err error) {
 }
 
 // GetRandomKey 随机文件名
-func (s *ossService) GetRandomKey(prefix string, filename string, suffix string) string {
+func (s *ossService) GetRandomKey(prefix string, suffix string) string {
 	randomKey := str_helper.UuidStr()
 	return prefix + randomKey + "." + suffix
 }
 
 // GetDateKey 日期随机文件名 //todo
-func (s *ossService) GetDateKey(prefix string, filename string, suffix string) string {
-	randomKey := ""
-	return prefix + randomKey + "." + suffix
-}
+// func (s *ossService) GetDateKey(prefix string, suffix string) string {
+// 	randomKey := ""
+// 	return prefix + randomKey + "." + suffix
+// }
