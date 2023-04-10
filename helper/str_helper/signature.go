@@ -51,7 +51,7 @@ func SignatureComplexStr(m map[string]string, keyOptions *SignatureStrKeyOptions
 			if is {
 				var vj map[string]string
 				err := json.Unmarshal([]byte(v), &vj) // 尝试解析json
-				if err != nil {
+				if err == nil {
 					v = SignatureComplexStr(vj, keyOptions, exclude)
 				}
 			}
