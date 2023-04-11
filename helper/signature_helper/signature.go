@@ -1,4 +1,4 @@
-package str_helper
+package signature_helper
 
 import (
 	"encoding/json"
@@ -8,6 +8,8 @@ import (
 
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/util/gconv"
+
+	"github.com/fainc/go-lib/helper/str_helper"
 )
 
 type SignatureStrKeyOptions struct {
@@ -26,7 +28,7 @@ func SignatureStr(m map[string]string, keyOptions *SignatureStrKeyOptions, exclu
 	str = ""
 	for _, k := range keys {
 		if _, ok := m[k]; ok {
-			if exclude == nil || !StrInSlice(k, exclude) {
+			if exclude == nil || !str_helper.StrInSlice(k, exclude) {
 				str = fmt.Sprintf("%s&%s=%s", str, k, m[k])
 			}
 		}
@@ -70,7 +72,7 @@ func SignatureComplexStr(m map[string]interface{}, keyOptions *SignatureStrKeyOp
 					}
 				}
 			}
-			if exclude == nil || !StrInSlice(k, exclude) {
+			if exclude == nil || !str_helper.StrInSlice(k, exclude) {
 				str = fmt.Sprintf("%s&%s=%s", str, k, v)
 			}
 		}
