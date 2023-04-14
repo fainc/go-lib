@@ -119,7 +119,7 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 }
 
 // StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发)
-func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, secret string, ctxKey ...string) (userId int, scope, id string, claims jwt.MapClaims, err error) {
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, secret string) (userId int, scope, id string, claims jwt.MapClaims, err error) {
 	userId, scope, id, claims, err = rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
 		Scopes: scopes,
@@ -130,27 +130,21 @@ func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, secret s
 		return
 	}
 	k := "JWT"
-	if len(ctxKey) == 1 && ctxKey[0] != "" {
-		k = ctxKey[0]
-	}
 	r.SetCtxVar(k+"_USER_ID", userId)
 	r.SetCtxVar(k+"_SCOPE", scope)
 	return
 }
 
-type jwtUser struct {
+type CtxJwtUser struct {
 	ID    int
 	SCOPE string
 }
 
 // GetCtxUser 获取CTX用户信息
-func (*jwtHelper) GetCtxUser(ctx context.Context, key ...string) jwtUser {
+func (*jwtHelper) GetCtxUser(ctx context.Context) CtxJwtUser {
 	r := g.RequestFromCtx(ctx)
 	k := "JWT"
-	if len(key) == 1 && key[0] != "" {
-		k = key[0]
-	}
-	return jwtUser{
+	return CtxJwtUser{
 		ID:    gconv.Int(r.GetCtxVar(k+"_USER_ID", 0)),
 		SCOPE: gconv.String(r.GetCtxVar(k+"_SCOPE", "UNKNOWN")),
 	}

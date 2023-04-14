@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/fainc/go-lib/crypto/md5_crypto"
+	"github.com/fainc/go-lib/helper/signature_helper"
 	"github.com/fainc/go-lib/helper/str_helper"
 )
 
@@ -28,7 +29,7 @@ func (rec *utils) GetNonceStr() string {
 func (rec *utils) GetSign(p []byte, key string) string {
 	var m map[string]string
 	_ = json.Unmarshal(p, &m)
-	str := str_helper.SignatureStr(m, &str_helper.SignatureStrKeyOptions{Key: "key", Value: key}, []string{"sign", "paySign"})
+	str := signature_helper.SignatureStr(m, &signature_helper.SignatureStrKeyOptions{Key: "key", Value: key}, []string{"sign", "paySign"})
 	return md5_crypto.Md5(str, true)
 }
 
