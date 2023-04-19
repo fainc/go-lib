@@ -27,7 +27,7 @@ type ParseParams struct {
 }
 
 // Parse jwt解析
-func (*jwtHelper) Parse(params ParseParams) (userId int, scope, id string, claims jwt.MapClaims, err error) {
+func (*jwtHelper) Parse(params ParseParams) (userId int, scope, jwtId string, claims jwt.MapClaims, err error) {
 	if params.Secret == "" {
 		err = errors.New("jwt secret invalid")
 		return
@@ -68,12 +68,12 @@ func (*jwtHelper) Parse(params ParseParams) (userId int, scope, id string, claim
 		err = errors.New("scope invalid")
 		return
 	}
-	idStr := claims["jti"]
-	if idStr == nil {
+	jtiStr := claims["jti"]
+	if jtiStr == nil {
 		err = errors.New("jti invalid")
 		return
 	}
-	return gconv.Int(userIdStr), gconv.String(scopeStr), gconv.String(idStr), claims, nil
+	return gconv.Int(userIdStr), gconv.String(scopeStr), gconv.String(jtiStr), claims, nil
 }
 
 type GenerateParams struct {
@@ -119,13 +119,17 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 }
 
 // StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发)
-func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes g.SliceStr, secret string) (userId int, scope, id string, claims jwt.MapClaims, err error) {
-	userId, scope, id, claims, err = rec.Parse(ParseParams{
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes, whiteTables g.SliceStr, secret string) (userId int, scope string, err error) {
+	userId, scope, _, _, err = rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
 		Scopes: scopes,
 		Secret: secret,
 	})
 	if err != nil {
+		whiteTable := garray.NewStrArrayFrom(whiteTables)
+		if !whiteTable.ContainsI(r.URL.Path) {
+			return 0, "UNKNOWN", err
+		}
 		scope = "UNKNOWN"
 		return
 	}
