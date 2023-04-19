@@ -118,19 +118,28 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 	return tokenString, nil
 }
 
+type StandardAuthParams struct {
+	Scopes      g.SliceStr
+	WhiteTables g.SliceStr
+	Secret      string
+}
+
 // StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发),拦截登录需要判断err和inWhiteTables,inWhiteTables一般不需要拦截
-func (rec *jwtHelper) StandardAuth(r *ghttp.Request, scopes, whiteTables g.SliceStr, secret string) (userId int, scope string, inWhiteTables bool, err error) {
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, p StandardAuthParams) (userId int, scope string, catchErr bool, err error) {
 	userId, scope, _, _, err = rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
-		Scopes: scopes,
-		Secret: secret,
+		Scopes: p.Scopes,
+		Secret: p.Secret,
 	})
 	if err != nil {
-		whiteTable := garray.NewStrArrayFrom(whiteTables)
-		if whiteTable.ContainsI(r.URL.Path) {
-			inWhiteTables = true
+		catchErr = true
+		if len(p.WhiteTables) != 0 {
+			whiteTable := garray.NewStrArrayFrom(p.WhiteTables)
+			if whiteTable.ContainsI(r.URL.Path) {
+				catchErr = false
+			}
 		}
-		return 0, "UNKNOWN", inWhiteTables, err
+		return
 	}
 	k := "JWT"
 	r.SetCtxVar(k+"_USER_ID", userId)
