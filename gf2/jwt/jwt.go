@@ -124,7 +124,7 @@ type StandardAuthParams struct {
 	Secret      string
 }
 
-// StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发),拦截登录需要判断err和inWhiteTables,inWhiteTables一般不需要拦截
+// StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发),通过err和catchErr判断拦截
 func (rec *jwtHelper) StandardAuth(r *ghttp.Request, p StandardAuthParams) (userId int, scope string, catchErr bool, err error) {
 	userId, scope, _, _, err = rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
