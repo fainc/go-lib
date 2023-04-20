@@ -8,12 +8,12 @@ type mp struct {
 	sdk *SdkClient
 }
 
-func Mp(AppId string) (*mp, error) {
-	sdk, err := Client().Get(AppId)
-	if err != nil {
-		return nil, err
-	}
-	return &mp{sdk}, nil
+func Mp(AppId, Secret string) *mp {
+	sdk, _ := Client().New(SdkClient{
+		AppId:  AppId,
+		Secret: Secret,
+	})
+	return &mp{sdk}
 }
 
 type AuthorizationParams struct {
@@ -39,6 +39,7 @@ func (rec *mp) Code2AccessToken(code string) (res *MpUserAccessTokenRes, err err
 	}
 	return
 }
+
 func (rec *mp) GetUserInfo(accessToken string, openId string, lang string) (res *MpUserInfoRes, err error) {
 	res, err = Api().GetMpUserInfo(accessToken, openId, lang)
 	return

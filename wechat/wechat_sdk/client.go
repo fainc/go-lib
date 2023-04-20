@@ -22,19 +22,19 @@ type SdkClient struct {
 	JatRwLock *sync.RWMutex // Jat读写锁
 }
 
-// Set 内存维护账号密码，如密钥变更重设密钥
-func (c *client) Set(params SdkClient) (*SdkClient, error) {
-	if clients[params.AppId] == nil {
-		clients[params.AppId] = &SdkClient{
-			AppId:     params.AppId,
-			Secret:    params.Secret,
-			SatRwLock: new(sync.RWMutex),
-			JatRwLock: new(sync.RWMutex),
-		}
-	} else {
+// New 内存维护账号密码
+func (c *client) New(params SdkClient) (*SdkClient, error) {
+	if clients[params.AppId] != nil {
 		if clients[params.AppId].Secret != params.Secret {
 			clients[params.AppId].Secret = params.Secret
 		}
+		return clients[params.AppId], nil
+	}
+	clients[params.AppId] = &SdkClient{
+		AppId:     params.AppId,
+		Secret:    params.Secret,
+		SatRwLock: new(sync.RWMutex),
+		JatRwLock: new(sync.RWMutex),
 	}
 	return clients[params.AppId], nil
 }

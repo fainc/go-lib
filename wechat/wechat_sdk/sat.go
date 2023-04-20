@@ -4,45 +4,40 @@ import (
 	"sync"
 )
 
-type sat struct{}
+type sat struct {
+	sdk *SdkClient
+}
 
-var satVar = sat{}
-
-func Sat() *sat {
-	return &satVar
+func Sat(sdk *SdkClient) *sat {
+	return &sat{sdk}
 }
 
 // Get  获取服务端接口调用凭据
-func (rec *sat) Get(sdk *SdkClient) (token string, err error) {
-	token, err = rec.getSatToken(sdk)
+func (rec *sat) Get() (token string, err error) {
+	token, err = rec.getSatToken()
 	if err != nil {
 		return
 	}
 	if token == "" {
-		token, err = rec.Refresh(sdk)
+		token, err = rec.Refresh()
 		return
 	}
 	return
 }
-func (rec *sat) getSatToken(sdk *SdkClient) (token string, err error) {
-	if sdk.SatRwLock == nil {
-		sdk.SatRwLock = new(sync.RWMutex)
+func (rec *sat) getSatToken() (token string, err error) {
+	if rec.sdk.SatRwLock == nil {
+		rec.sdk.SatRwLock = new(sync.RWMutex)
 	}
-	defer sdk.SatRwLock.RUnlock()
-	sdk.SatRwLock.RLock()
+	defer rec.sdk.SatRwLock.RUnlock()
+	rec.sdk.SatRwLock.RLock()
 	switch Cache().GetEngine() {
 	case "redis":
-		token, err = Cache().GetRedisCache("sat", sdk.AppId)
-		if err != nil {
-			return
-		}
-	case "remote": // 通过远程凭据中心获取
-		token, err = RemoteCredentials().GetSat(sdk)
+		token, err = Cache().GetRedisCache("sat", rec.sdk.AppId)
 		if err != nil {
 			return
 		}
 	default:
-		token, err = Cache().GetMemoryCache("sat", sdk.AppId)
+		token, err = Cache().GetMemoryCache("sat", rec.sdk.AppId)
 		if err != nil {
 			return
 		}
@@ -51,25 +46,25 @@ func (rec *sat) getSatToken(sdk *SdkClient) (token string, err error) {
 }
 
 // Refresh  刷新接口调用凭据
-func (rec *sat) Refresh(sdk *SdkClient) (token string, err error) {
-	if sdk.SatRwLock == nil {
-		sdk.SatRwLock = new(sync.RWMutex)
+func (rec *sat) Refresh() (token string, err error) {
+	if rec.sdk.SatRwLock == nil {
+		rec.sdk.SatRwLock = new(sync.RWMutex)
 	}
-	sdk.SatRwLock.Lock()
-	defer sdk.SatRwLock.Unlock()
-	s, err := Api().GetSat(sdk)
+	rec.sdk.SatRwLock.Lock()
+	defer rec.sdk.SatRwLock.Unlock()
+	s, err := Api().GetSat(rec.sdk)
 	if err != nil {
 		return
 	}
 	token = s.AccessToken
 	switch Cache().GetEngine() {
 	case "redis":
-		err = Cache().SetRedisCache("sat", sdk.AppId, token, s.ExpiresIn)
+		err = Cache().SetRedisCache("sat", rec.sdk.AppId, token, s.ExpiresIn)
 		if err != nil {
 			return
 		}
 	default:
-		err = Cache().SetMemoryCache("sat", sdk.AppId, token, s.ExpiresIn)
+		err = Cache().SetMemoryCache("sat", rec.sdk.AppId, token, s.ExpiresIn)
 		if err != nil {
 			return
 		}

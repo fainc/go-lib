@@ -2,8 +2,6 @@ package wechat_sdk
 
 import (
 	"errors"
-
-	"github.com/fainc/go-lib/helper/str_helper"
 )
 
 type utils struct{}
@@ -12,11 +10,6 @@ var utilsVar = utils{}
 
 func Utils() *utils {
 	return &utilsVar
-}
-
-// GetNonceStr 获取随机字符串
-func (rec *utils) GetNonceStr() string {
-	return str_helper.NonceStr()
 }
 
 // DownloadPathCheck 文件下载路径检查
