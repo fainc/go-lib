@@ -77,12 +77,13 @@ func (*jwtHelper) Parse(params ParseParams) (userId int, scope, jwtId string, cl
 }
 
 type GenerateParams struct {
-	UserId    int           // * 非0用户ID
+	UserId    int64         // * 非0用户ID
 	Scope     string        // * 授权scope标志
 	Duration  time.Duration // * 授权时长
 	Secret    string        // * jwt及加密密钥
 	Id        string        // * 唯一标识，为空时使用随机uuid xxxx-xxxx-xxxx-xxx
-	NotBefore *time.Time    // * 生效时间 nil时使用now
+	NotBefore *time.Time    // 生效时间 nil时使用now
+	Ext       string        // 附加数据
 }
 
 // Generate 生成jwt
@@ -94,8 +95,9 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 		params.Id = str_helper.UuidStr()
 	}
 	type MyCustomClaims struct {
-		UserId int    `json:"userId"`
+		UserId int64  `json:"userId"`
 		Scope  string `json:"scope"`
+		Ext    string `json:"ext"`
 		jwt.RegisteredClaims
 	}
 	nbf := time.Now()
@@ -105,6 +107,7 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 	claims := MyCustomClaims{
 		params.UserId,
 		params.Scope,
+		params.Ext,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(params.Duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
