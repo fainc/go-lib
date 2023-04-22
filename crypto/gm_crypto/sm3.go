@@ -10,7 +10,7 @@ import (
 	"github.com/tjfoc/gmsm/sm3"
 )
 
-func SM3Sum(data string, salt ...string) (hex, bs64 string) {
+func SM3Sum(data string, returnHex bool, salt ...string) (output string) {
 	h := sm3.New()
 	str := data
 	if len(salt) >= 1 {
@@ -18,13 +18,16 @@ func SM3Sum(data string, salt ...string) (hex, bs64 string) {
 	}
 	h.Write([]byte(str))
 	sum := h.Sum(nil)
-	return formatRet(sum)
+	return formatRet(sum, returnHex)
 }
 
-func formatRet(sum []byte) (hexStr, bs64 string) {
-	return strings.ToUpper(hex.EncodeToString(sum)), base64.StdEncoding.EncodeToString(sum)
+func formatRet(sum []byte, returnHex bool) (output string) {
+	if returnHex {
+		return strings.ToUpper(hex.EncodeToString(sum))
+	}
+	return base64.StdEncoding.EncodeToString(sum)
 }
-func SM3FileSum(filePath string) (hex, bs64 string, err error) {
+func SM3FileSum(filePath string, returnHex bool) (output string, err error) {
 	f, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		err = errors.New("SM3FileSum 读取文件失败")
@@ -33,6 +36,6 @@ func SM3FileSum(filePath string) (hex, bs64 string, err error) {
 	h := sm3.New()
 	h.Write(f)
 	sum := h.Sum(nil)
-	hex, bs64 = formatRet(sum)
+	output = formatRet(sum, returnHex)
 	return
 }
