@@ -87,9 +87,10 @@ type GenerateParams struct {
 }
 
 // Generate 生成jwt
-func (*jwtHelper) Generate(params GenerateParams) (string, error) {
+func (*jwtHelper) Generate(params GenerateParams) (tokenString, jti string, err error) {
 	if params.UserId == 0 || params.Scope == "" || params.Duration == 0 || params.Secret == "" {
-		return "", errors.New("generate jwt params invalid")
+		err = errors.New("generate jwt params invalid")
+		return
 	}
 	if params.Id == "" {
 		params.Id = str_helper.UuidStr()
@@ -117,8 +118,8 @@ func (*jwtHelper) Generate(params GenerateParams) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, _ := token.SignedString([]byte(params.Secret))
-	return tokenString, nil
+	tokenString, err = token.SignedString([]byte(params.Secret))
+	return
 }
 
 type StandardAuthParams struct {
