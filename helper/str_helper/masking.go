@@ -21,6 +21,9 @@ func MaskMobile(m string, rule int) string {
 	}
 	return Mask(m, &MaskParams{Pos: r})
 }
+func MaskName(n string, _ int) string {
+	return n[:3] + maskMarker((len(n)-3)/3-1)
+}
 func MaskIdentity(m string, rule int) string {
 	var r []int
 	switch rule {
