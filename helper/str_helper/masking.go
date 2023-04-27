@@ -21,7 +21,7 @@ func MaskMobile(m string, rule int) string {
 	}
 	return Mask(m, &MaskParams{Pos: r})
 }
-func MaskName(n string, _ int) string {
+func MaskName(n string) string {
 	if len(n) <= 3 {
 		return "**"
 	}
@@ -45,6 +45,8 @@ func MaskIdentity(m string, rule int) string {
 	}
 	return Mask(m, &MaskParams{Pos: r})
 }
+
+// MaskAddress 地址遮掩 仅遮掩地址内数字部分 // todo rule
 func MaskAddress(add string, _ int) string {
 	var numbersRegExp = regexp.MustCompile("[0-9]+")
 	return numbersRegExp.ReplaceAllString(add, "*")
