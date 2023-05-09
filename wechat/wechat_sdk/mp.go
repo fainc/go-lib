@@ -69,10 +69,6 @@ func (rec *mp) GetUserSubscribe(openId string) (subscribe int, err error) {
 // GetQrCode 获取公众号二维码
 // https://developers.weixin.qq.com/doc/offiaccount/Account_Management/Generating_a_Parametric_QR_Code.html
 func (rec *mp) GetQrCode(params *MpQrCodeParams, downloadPath string) (res *MpQrCodeRes, err error) {
-	err = Utils().DownloadPathCheck(downloadPath)
-	if err != nil {
-		return
-	}
 	token, err := Sat(rec.sdk).Get()
 	if err != nil {
 		return
@@ -82,6 +78,10 @@ func (rec *mp) GetQrCode(params *MpQrCodeParams, downloadPath string) (res *MpQr
 		return
 	}
 	if downloadPath != "" {
+		err = Utils().DownloadPathCheck(downloadPath)
+		if err != nil {
+			return
+		}
 		err = Request().GetDownload("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket="+url.QueryEscape(res.Ticket), downloadPath)
 		return
 	}
