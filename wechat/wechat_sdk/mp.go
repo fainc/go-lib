@@ -57,8 +57,8 @@ func (rec *mp) GetAccountUserInfo(openId string, lang string) (res *MpAccountUse
 }
 
 // GetUserSubscribe 获取用户是否关注公众号（GetAccountUserInfo 的简化版）
-func (rec *mp) GetUserSubscribe(openId string, lang string) (subscribe int, err error) {
-	res, err := rec.GetAccountUserInfo(openId, lang)
+func (rec *mp) GetUserSubscribe(openId string) (subscribe int, err error) {
+	res, err := rec.GetAccountUserInfo(openId, "")
 	if err != nil {
 		return
 	}
