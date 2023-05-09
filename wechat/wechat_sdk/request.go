@@ -90,3 +90,26 @@ func (rec *request) PostAndDownloadCode(url string, data interface{}, res interf
 	}
 	return
 }
+func (rec *request) GetDownload(url string, downloadPath string) (err error) {
+	hc := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return
+	}
+	resp, err := hc.Do(req)
+	if err != nil {
+		return
+	}
+	if resp.StatusCode != 200 {
+		err = errors.New("远程请求状态码错误")
+		return
+	}
+	respBody, _ := io.ReadAll(resp.Body)
+	err = ioutil.WriteFile(downloadPath, respBody, 0755)
+	if err != nil {
+		fmt.Println("GetAndDownload 文件写入错误：" + err.Error())
+		err = errors.New("文件保存失败，请检查保存路径及读写权限")
+		return
+	}
+	return
+}

@@ -45,7 +45,7 @@ func (rec *miniProgram) GetUserPhoneNumber(code string) (res *UserPhoneNumberRes
 	return
 }
 
-// DownloadWxACode 获取小程序码
+// DownloadWxACode 下载小程序码
 //  doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/getQRCode.html
 func (rec *miniProgram) DownloadWxACode(params *WxACodeParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
@@ -61,7 +61,7 @@ func (rec *miniProgram) DownloadWxACode(params *WxACodeParams, downloadPath stri
 	return
 }
 
-// DownloadWxACodeUnLimit 获取不限制的小程序码
+// DownloadWxACodeUnLimit 下载不限制的小程序码
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/getUnlimitedQRCode.html
 func (rec *miniProgram) DownloadWxACodeUnLimit(params *WxACodeUnLimitParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
@@ -80,7 +80,7 @@ func (rec *miniProgram) DownloadWxACodeUnLimit(params *WxACodeUnLimitParams, dow
 	return
 }
 
-// DownloadWxAQrCode 获取小程序二维码
+// DownloadWxAQrCode 下载小程序二维码
 //  doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/createQRCode.html
 func (rec *miniProgram) DownloadWxAQrCode(params *WxAQrCodeParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {

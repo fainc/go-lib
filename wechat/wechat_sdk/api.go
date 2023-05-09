@@ -96,6 +96,37 @@ func (rec *api) GetMpUserInfo(accessToken string, openid string, lang string) (r
 	return
 }
 
+type MpAccountUserInfoRes struct {
+	WxCommonRes
+	Subscribe      int    `json:"subscribe"`
+	Openid         string `json:"openid"`
+	Language       string `json:"language"`
+	SubscribeTime  int    `json:"subscribe_time"`
+	UnionId        string `json:"unionid"`
+	Remark         string `json:"remark"`
+	GroupId        int    `json:"groupid"`
+	TagIdList      []int  `json:"tagid_list"`
+	SubscribeScene string `json:"subscribe_scene"`
+	QrScene        int    `json:"qr_scene"`
+	QrSceneStr     string `json:"qr_scene_str"`
+}
+
+func (rec *api) GetMpAccountUserInfo(accessToken string, openid string, lang string) (res *MpAccountUserInfoRes, err error) {
+	if lang == "" {
+		lang = "zh_CN"
+	}
+	url := "https://api.weixin.qq.com/cgi-bin/user/info?access_token=" + accessToken + "&openid=" + openid + "&lang=" + lang
+	err = Request().Get(url, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	return
+}
+
 type JsApiTicketRes struct {
 	WxCommonRes
 	Ticket    string `json:"ticket"`

@@ -40,7 +40,46 @@ func (rec *mp) Code2AccessToken(code string) (res *MpUserAccessTokenRes, err err
 	return
 }
 
-func (rec *mp) GetUserInfo(accessToken string, openId string, lang string) (res *MpUserInfoRes, err error) {
-	res, err = Api().GetMpUserInfo(accessToken, openId, lang)
+// GetUserInfo 获取用户信息（使用用户accessToken + openId）
+func (rec *mp) GetUserInfo(userAccessToken string, openId string, lang string) (res *MpUserInfoRes, err error) {
+	res, err = Api().GetMpUserInfo(userAccessToken, openId, lang)
+	return
+}
+
+// GetAccountUserInfo 获取公众号用户信息（使用公众号accessToken + openId），注意：本接口不会输出头像昵称，未关注公众号拉取不到任何信息，主要用途：用于判断用户是否关注公众号
+func (rec *mp) GetAccountUserInfo(serverAccessToken string, openId string, lang string) (res *MpAccountUserInfoRes, err error) {
+	res, err = Api().GetMpAccountUserInfo(serverAccessToken, openId, lang)
+	return
+}
+
+// GetUserSubscribe 获取用户是否关注公众号（GetAccountUserInfo 的简化版）
+func (rec *mp) GetUserSubscribe(serverAccessToken string, openId string, lang string) (subscribe int, err error) {
+	res, err := rec.GetAccountUserInfo(serverAccessToken, openId, lang)
+	if err != nil {
+		return
+	}
+	subscribe = res.Subscribe
+	return
+}
+
+// GetQrCode 获取公众号二维码
+// https://developers.weixin.qq.com/doc/offiaccount/Account_Management/Generating_a_Parametric_QR_Code.html
+func (rec *mp) GetQrCode(params *MpQrCodeParams, downloadPath string) (res *MpQrCodeRes, err error) {
+	err = Utils().DownloadPathCheck(downloadPath)
+	if err != nil {
+		return
+	}
+	token, err := Sat(rec.sdk).Get()
+	if err != nil {
+		return
+	}
+	res, err = MpApi().GetQrCode(token, params)
+	if err != nil {
+		return
+	}
+	if downloadPath != "" {
+		err = Request().GetDownload("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket="+url.QueryEscape(res.Ticket), downloadPath)
+		return
+	}
 	return
 }
