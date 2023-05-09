@@ -24,6 +24,7 @@ type MpQrCodeRes struct {
 	Ticket        string `json:"ticket"`
 	ExpireSeconds int    `json:"expire_seconds"`
 	Url           string `json:"url"`
+	Path          string `json:"path"`
 }
 
 func (rec *mpApi) GetQrCode(access string, params *MpQrCodeParams) (res *MpQrCodeRes, err error) {

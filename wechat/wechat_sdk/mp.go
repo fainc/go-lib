@@ -2,6 +2,8 @@ package wechat_sdk
 
 import (
 	"net/url"
+
+	"github.com/fainc/go-lib/helper/str_helper"
 )
 
 type mp struct {
@@ -82,7 +84,12 @@ func (rec *mp) GetQrCode(params *MpQrCodeParams, downloadPath string) (res *MpQr
 		if err != nil {
 			return
 		}
-		err = Request().GetDownload("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket="+url.QueryEscape(res.Ticket), downloadPath)
+		path := downloadPath + "MpQrCode_" + str_helper.NonceStr() + ".jpeg"
+		err = Request().GetDownload("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket="+url.QueryEscape(res.Ticket), path)
+		if err != nil {
+			return
+		}
+		res.Path = path
 		return
 	}
 	return
