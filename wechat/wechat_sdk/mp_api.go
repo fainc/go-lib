@@ -13,11 +13,11 @@ func MpApi() *mpApi {
 }
 
 type MpQrCodeParams struct {
-	ToUser           string `json:"expire_seconds"`
-	TemplateId       string `json:"action_name"`
-	Page             string `json:"action_info"`
-	MiniProgramState string `json:"scene_id"`
-	Lang             string `json:"scene_str"`
+	ExpireSeconds int    `json:"expire_seconds"`
+	ActionName    string `json:"action_name"`
+	ActionInfo    string `json:"action_info"`
+	SceneId       int    `json:"scene_id"`
+	SceneStr      string `json:"scene_str"`
 }
 type MpQrCodeRes struct {
 	WxCommonRes
