@@ -14,17 +14,13 @@ func Client() *client {
 }
 
 var clients = make(map[string]*SdkClient)
-var clientRwLock *sync.RWMutex
+var clientRwLock sync.RWMutex
 
 type SdkClient struct {
 	AppId     string        `json:"appId"` // 小程序/公众号app_id/企业微信cropId
 	Secret    string        `json:"secret"`
 	SatRwLock *sync.RWMutex // Sat读写锁
 	JatRwLock *sync.RWMutex // Jat读写锁
-}
-
-func init() {
-	clientRwLock = new(sync.RWMutex)
 }
 
 // New 内存维护账号密码
