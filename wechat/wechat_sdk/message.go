@@ -33,3 +33,14 @@ func (rec *message) SendSubscribeMessage(p *MiniProgramSubscribeMessageParams) (
 	res, err = Api().SendSubscribeMessage(token, p)
 	return
 }
+
+// SendMpTemplateMessage 发送公众号模板消息
+// https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html
+func (rec *message) SendMpTemplateMessage(p *MiniProgramSubscribeMessageParams) (res *WxCommonRes, err error) {
+	token, err := Sat(rec.sdk).Get()
+	if err != nil {
+		return
+	}
+	res, err = Api().SendSubscribeMessage(token, p)
+	return
+}
