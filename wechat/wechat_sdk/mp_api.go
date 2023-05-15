@@ -48,7 +48,7 @@ type MpTemplateMessageParams struct {
 	ToUser      string                   `json:"touser"`
 	TemplateId  string                   `json:"template_id"`
 	Url         string                   `json:"url,omitempty"`
-	MiniProgram *miniProgram             `json:"miniprogram,omitempty"`
+	MiniProgram *MessageMiniProgramConf  `json:"miniprogram,omitempty"`
 	ClientMsgId string                   `json:"client_msg_id,omitempty"`
 	Data        map[string]*MessageValue `json:"data"`
 }
