@@ -58,7 +58,7 @@ type MpTemplateMessageRes struct {
 }
 
 func (rec *mpApi) SendMpTemplateMessage(access string, params *MpTemplateMessageParams) (res *MpTemplateMessageRes, err error) {
-	url := "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=" + access
+	url := "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + access
 	err = Request().Post(url, params, &res)
 	if err != nil {
 		return
