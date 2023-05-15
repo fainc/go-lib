@@ -54,7 +54,7 @@ type MpTemplateMessageParams struct {
 }
 type MpTemplateMessageRes struct {
 	WxCommonRes
-	MsgId string `json:"msgid"`
+	MsgId int64 `json:"msgid"`
 }
 
 func (rec *mpApi) SendMpTemplateMessage(access string, params *MpTemplateMessageParams) (res *MpTemplateMessageRes, err error) {
