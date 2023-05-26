@@ -79,11 +79,14 @@ func (rec *utils) ParsePaymentNotify(body []byte, key string) (p *PaymentNotify,
 	if err != nil {
 		return
 	}
-	sign := rec.GetSign(params, key)
-	if sign != raw.Sign {
-		err = errors.New("支付通知签名验证失败")
-		return
+	if key != "" { // 不传key不验签
+		sign := rec.GetSign(params, key)
+		if sign != raw.Sign {
+			err = errors.New("支付通知签名验证失败")
+			return
+		}
 	}
+
 	if raw.ReturnCode != "SUCCESS" || raw.ResultCode != "SUCCESS" {
 		err = errors.New("未成功的支付通知")
 		return
