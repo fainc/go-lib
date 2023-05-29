@@ -69,6 +69,13 @@ type PaymentNotify struct {
 }
 
 // ParsePaymentNotify 解析微信支付通知数据
+// Usage:
+// body := g.RequestFromCtx(ctx).GetBody()
+// resp, _, err := wechat_payment_v1.Utils().ParsePaymentNotify(body, "XXXXXX")
+// if err != nil {
+// 	response.Xml().CustomWriter(ctx, wechat_payment_v1.Utils().SuccessResp())
+// return
+// }
 func (rec *utils) ParsePaymentNotify(body []byte, key string) (p *PaymentNotify, raw *PaymentRawNotify, err error) {
 	raw = &PaymentRawNotify{}
 	err = xml.Unmarshal(body, raw)

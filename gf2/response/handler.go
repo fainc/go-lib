@@ -38,29 +38,33 @@ func HandlerResponse(r *ghttp.Request) {
 			Json().UnAuthorizedError(ctx, code.Message(), code.Detail())
 			return
 		}
-		if code.Code() == 402 { // 登录
+		if code.Code() == 402 { // 解密
 			Json().DecryptError(ctx, code.Message(), code.Detail())
 			return
 		}
-		if code.Code() == 403 { // 登录
+		if code.Code() == 403 { // 签名
 			Json().SignatureError(ctx, code.Message(), code.Detail())
 			return
 		}
-		if code.Code() == 404 { // 登录
+		if code.Code() == 404 { // 404
 			Json().NotFoundError(ctx, code.Message())
 			return
 		}
 		Json().Error(ctx, err.Error(), code.Code(), code.Detail()) // 常规错误
 		return
 	}
-
-	// 已退出程序流程
+	// 已退出程序流程，不走当前中间件
 	if r.IsExited() {
 		return
 	}
 
-	// 已有非错误自定义输出内容
+	// 自定义输出
 	if gmeta.Get(res, "mime").String() == "custom" {
+		return
+	}
+
+	// 状态码正常且已有buffer内容
+	if r.Response.Status == http.StatusOK && r.Response.BufferLength() > 0 {
 		return
 	}
 
