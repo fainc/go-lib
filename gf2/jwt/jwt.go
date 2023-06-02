@@ -27,7 +27,7 @@ type ParseParams struct {
 }
 
 // Parse jwt解析
-func (*jwtHelper) Parse(params ParseParams) (userId int, scope, jwtId string, claims jwt.MapClaims, err error) {
+func (*jwtHelper) Parse(params ParseParams) (userID int, scope, jwtId string, claims jwt.MapClaims, err error) {
 	if params.Secret == "" {
 		err = errors.New("jwt secret invalid")
 		return
@@ -129,8 +129,8 @@ type StandardAuthParams struct {
 }
 
 // StandardAuth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发),通过err和catchErr判断拦截
-func (rec *jwtHelper) StandardAuth(r *ghttp.Request, p StandardAuthParams) (userId int, scope string, catchErr bool, err error) {
-	userId, scope, jwtID, _, err := rec.Parse(ParseParams{
+func (rec *jwtHelper) StandardAuth(r *ghttp.Request, p StandardAuthParams) (userID int, scope string, catchErr bool, err error) {
+	userID, scope, jwtID, _, err := rec.Parse(ParseParams{
 		Token:  r.GetHeader("Authorization"),
 		Scopes: p.Scopes,
 		Secret: p.Secret,
@@ -145,7 +145,7 @@ func (rec *jwtHelper) StandardAuth(r *ghttp.Request, p StandardAuthParams) (user
 		}
 		return
 	}
-	r.SetCtxVar("JWT_USER_ID", userId)
+	r.SetCtxVar("JWT_USER_ID", userID)
 	r.SetCtxVar("JWT_USER_TOKEN_ID", jwtID)
 	r.SetCtxVar("JWT_USER_SCOPE", scope)
 	return
