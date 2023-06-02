@@ -88,7 +88,7 @@ type GenerateParams struct {
 }
 
 // Generate 生成jwt
-// Deprecated: 请使用新版接口 jwt.Issue 发行token
+// Deprecated: 请使用新版接口 jwt.Helper().Issue 发行token
 func (*jwtHelper) Generate(params GenerateParams) (tokenString, jti string, err error) {
 	if params.UserId == 0 || params.Scope == "" || params.Duration == 0 || params.Secret == "" {
 		err = errors.New("generate jwt params invalid")
