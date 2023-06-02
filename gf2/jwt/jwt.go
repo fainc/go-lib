@@ -27,6 +27,7 @@ type ParseParams struct {
 }
 
 // Parse jwt解析
+// Deprecated: 请使用新版接口 jwt.Validator 验证Jwt
 func (*jwtHelper) Parse(params ParseParams) (userID int, scope, jwtId string, claims jwt.MapClaims, err error) {
 	if params.Secret == "" {
 		err = errors.New("jwt secret invalid")
@@ -87,6 +88,7 @@ type GenerateParams struct {
 }
 
 // Generate 生成jwt
+// Deprecated: 请使用新版接口 jwt.Issue 发行token
 func (*jwtHelper) Generate(params GenerateParams) (tokenString, jti string, err error) {
 	if params.UserId == 0 || params.Scope == "" || params.Duration == 0 || params.Secret == "" {
 		err = errors.New("generate jwt params invalid")
