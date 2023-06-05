@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
-	"io/ioutil"
+	"os"
 
 	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tjfoc/gmsm/x509"
@@ -65,7 +65,7 @@ func SM2ReadPrivateKeyFromPem(priPem, password string) (pri *sm2.PrivateKey, err
 	return
 }
 func SM2ReadPrivateKeyFromPath(filePath, password string) (pri *sm2.PrivateKey, err error) {
-	f, err := ioutil.ReadFile(filePath)
+	f, err := os.ReadFile(filePath)
 	if err != nil {
 		err = errors.New("读取密钥证书文件失败")
 		return
@@ -88,7 +88,7 @@ func SM2ReadPublicKeyFromPem(pubPem string) (pub *sm2.PublicKey, err error) {
 }
 
 func SM2ReadPublicKeyFromPath(filePath string) (pub *sm2.PublicKey, err error) {
-	f, err := ioutil.ReadFile(filePath)
+	f, err := os.ReadFile(filePath)
 	if err != nil {
 		err = errors.New("读取密钥证书文件失败")
 		return
@@ -101,6 +101,10 @@ func SM2ReadPublicKeyFromPath(filePath string) (pub *sm2.PublicKey, err error) {
 	return
 }
 func SM2EncryptAsn1(pubPem, data string, isHex bool) (cipherText string, err error) {
+	if data == "" {
+		err = errors.New("不支持空内容加密")
+		return
+	}
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -113,11 +117,14 @@ func SM2EncryptAsn1(pubPem, data string, isHex bool) (cipherText string, err err
 		return hex.EncodeToString(cipher), nil
 	}
 	return base64.StdEncoding.EncodeToString(cipher), nil
-
 }
 
 // SM2Encrypt mode 0 C1C3C2 mode1 C1C2C3
 func SM2Encrypt(pubPem, data string, isHex bool, mode int) (cipherText string, err error) {
+	if data == "" {
+		err = errors.New("不支持空内容加密")
+		return
+	}
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		return
@@ -130,9 +137,11 @@ func SM2Encrypt(pubPem, data string, isHex bool, mode int) (cipherText string, e
 		return hex.EncodeToString(cipher), nil
 	}
 	return base64.StdEncoding.EncodeToString(cipher), nil
-
 }
 func SM2DecryptAsn1(priPem, pwd, data string, isHex bool) (plainText string, err error) {
+	if data == "" {
+		return
+	}
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -158,7 +167,7 @@ func SM2DecryptAsn1(priPem, pwd, data string, isHex bool) (plainText string, err
 	}
 
 	plain, err := pri.DecryptAsn1(d) // sm2解密
-	if err != nil {
+	if err != nil || plain == nil {
 		err = errors.New("数据解密失败，请核对私钥证书是否正确")
 		return
 	}
@@ -167,6 +176,9 @@ func SM2DecryptAsn1(priPem, pwd, data string, isHex bool) (plainText string, err
 
 // SM2Decrypt mode 0 C1C3C2 mode1 C1C2C3
 func SM2Decrypt(priPem, pwd, data string, isHex bool, mode int) (plainText string, err error) {
+	if data == "" {
+		return
+	}
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -191,7 +203,7 @@ func SM2Decrypt(priPem, pwd, data string, isHex bool, mode int) (plainText strin
 		}
 	}
 	plain, err := sm2.Decrypt(pri, d, mode)
-	if err != nil {
+	if err != nil || plain == nil {
 		err = errors.New("数据解密失败，请核对私钥证书是否正确")
 		return
 	}
@@ -201,6 +213,10 @@ func SM2Decrypt(priPem, pwd, data string, isHex bool, mode int) (plainText strin
 // PrivateSign 签名 der编解码 sm3杂凑
 // 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
 func PrivateSign(priPem, pwd, data string, isHex bool) (signStr string, err error) {
+	if data == "" {
+		err = errors.New("不支持空内容加签")
+		return
+	}
 	var password []byte
 	if pwd != "" {
 		password = []byte(pwd)
@@ -227,6 +243,10 @@ func PrivateSign(priPem, pwd, data string, isHex bool) (signStr string, err erro
 // 与其它语言或库互通时 需要仔细核对 sm3 杂凑、userId、asn.1 der编码是否各端一致
 
 func PublicVerify(pubPem, data, sign string, isHex bool) (ok bool, err error) {
+	if data == "" {
+		err = errors.New("不支持空内容验签")
+		return
+	}
 	pub, err := x509.ReadPublicKeyFromPem([]byte(pubPem))
 	if err != nil {
 		err = errors.New("加载私钥证书失败，请检查私钥证书和证书密码（若有）")

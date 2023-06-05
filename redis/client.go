@@ -20,6 +20,10 @@ type NewRedisConf struct {
 
 // Init redis全局初始化
 func Init(conf NewRedisConf) (err error) {
+	if rdb != nil {
+		err = errors.New("golib redis实例已全局初始化，请勿重复初始化")
+		return
+	}
 	d := goRedis.NewClient(&goRedis.Options{
 		Addr:     conf.Address,
 		Password: conf.Password,
@@ -40,7 +44,7 @@ func Init(conf NewRedisConf) (err error) {
 // GetClient 获取 redis 全局实例
 func GetClient() (client *goRedis.Client, err error) {
 	if rdb == nil {
-		err = errors.New("golib redis实例未全局初始化，请使用golib包的 redis.Init()进行初始化")
+		err = errors.New("golib redis实例未全局初始化，请在全局启动时使用golib包的 redis.Init()进行初始化")
 		return
 	}
 	return rdb, nil

@@ -9,14 +9,14 @@ import (
 
 // EncryptCBC AES CBC 加密
 func EncryptCBC(text, key string, ivOption ...string) (string, error) {
+	if text == "" {
+		return "", errors.New("不支持空内容加密")
+	}
 	ivStr := "0000000000000000"
 	if ivOption != nil || len(ivOption) >= 1 {
 		ivStr = ivOption[0]
 	}
 	iv := []byte(ivStr)
-	if text == "" {
-		return "", errors.New("不支持加密空字符串")
-	}
 	plaintext := []byte(text)
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -34,6 +34,9 @@ func EncryptCBC(text, key string, ivOption ...string) (string, error) {
 }
 
 func DecryptCBC(text, key string, ivOption ...string) (string, error) {
+	if text == "" {
+		return "", nil
+	}
 	ivStr := "0000000000000000"
 	if ivOption != nil || len(ivOption) >= 1 {
 		ivStr = ivOption[0]

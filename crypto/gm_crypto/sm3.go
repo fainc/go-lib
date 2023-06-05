@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/tjfoc/gmsm/sm3"
@@ -14,7 +14,7 @@ func SM3Sum(data string, returnHex bool, salt ...string) (output string) {
 	h := sm3.New()
 	str := data
 	if len(salt) >= 1 {
-		str = str + salt[0]
+		str += salt[0]
 	}
 	h.Write([]byte(str))
 	sum := h.Sum(nil)
@@ -28,7 +28,7 @@ func formatRet(sum []byte, returnHex bool) (output string) {
 	return base64.StdEncoding.EncodeToString(sum)
 }
 func SM3FileSum(filePath string, returnHex bool) (output string, err error) {
-	f, err := ioutil.ReadFile(filePath)
+	f, err := os.ReadFile(filePath)
 	if err != nil {
 		err = errors.New("SM3FileSum 读取文件失败")
 		return

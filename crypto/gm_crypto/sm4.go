@@ -24,6 +24,10 @@ func sm4Operate(key, data []byte, mode string, isEncrypt bool) (out []byte, err 
 	return
 }
 func SM4Encrypt(mode, key, data string, isHex bool) (outStr string, err error) {
+	if data == "" {
+		err = errors.New("不支持空内容加密")
+		return
+	}
 	out, err := sm4Operate([]byte(key), []byte(data), mode, true)
 	if err != nil {
 		return
@@ -34,6 +38,9 @@ func SM4Encrypt(mode, key, data string, isHex bool) (outStr string, err error) {
 	return base64.StdEncoding.EncodeToString(out), nil
 }
 func SM4Decrypt(mode, key, data string, isHex bool) (outStr string, err error) {
+	if data == "" {
+		return "", nil
+	}
 	var db []byte
 	if isHex {
 		db, err = hex.DecodeString(data)
