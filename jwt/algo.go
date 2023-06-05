@@ -10,9 +10,8 @@ const AlgoAES = "AES256"
 const AlgoSM4 = "SM4"
 
 type TokenClaims struct {
-	UserID     string `json:"userID,omitempty"`
+	UserID     string `json:"uid,omitempty"`
 	Ext        string `json:"ext,omitempty"`
-	Encrypted  bool   `json:"encrypted,omitempty"`
-	CryptoAlgo string `json:"cryptoAlgo,omitempty"`
+	CryptoAlgo string `json:"crypto,omitempty"`
 	jwt.RegisteredClaims
 }

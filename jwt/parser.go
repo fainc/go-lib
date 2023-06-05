@@ -149,7 +149,7 @@ func (rec *parser) Validate(params ValidateParams) (res *TokenClaims, err error)
 			return nil, err
 		}
 	}
-	if claims.Encrypted {
+	if claims.CryptoAlgo != "" {
 		if err = rec.decrypt(claims); err != nil {
 			return nil, err
 		}

@@ -38,37 +38,42 @@ type IssueParams struct {
 	NotBefore time.Time     `json:"notBefore"`        // 可选，启用时间
 	Ext       string        `json:"ext,omitempty"`    // 可选，额外用户信息，例如邮箱、昵称等，不建议存储用户敏感数据，如存储敏感数据请传加密密钥进行加密。
 	JwtID     string        `json:"jwtID,omitempty"`  // 可选，自定义 jti，不传使用随机uuid
-	Issuer    string        `json:"issuer,omitempty"` // 可选，签发者标记（可用于分布式签发端标记等），不传默认jwt.iss
-	encrypted bool          // 是否加密内部标记
+	Issuer    string        `json:"issuer,omitempty"` // 可选，签发者标记（可用于分布式签发端标记等
 }
 
 // check 签发基础信息核验
 func (rec *issuer) check(params *IssueParams) (err error) {
 	// 基础配置校验
-	if rec.conf.JwtAlgo != AlgoES256 && rec.conf.JwtAlgo != AlgoHS256 {
+	switch rec.conf.JwtAlgo { // 签名算法校验
+	case AlgoHS256:
+		if len(rec.conf.JwtSecret) < 32 {
+			return errors.New("HS256签发算法 需要32位以上密钥")
+		}
+	case AlgoES256:
+		if rec.conf.JwtPrivate == nil {
+			return errors.New("ES256签发算法 私钥不能为空")
+		}
+	default:
 		return errors.New("指定签发算法无效")
 	}
-	if rec.conf.JwtAlgo == AlgoHS256 && len(rec.conf.JwtSecret) < 32 {
-		return errors.New("HS256签发算法 需要32位以上密钥")
-	}
-	if rec.conf.JwtAlgo == AlgoES256 && rec.conf.JwtPrivate == nil {
-		return errors.New("ES256签发算法 私钥不能为空")
-	}
-	if rec.conf.CryptoAlgo != AlgoAES && rec.conf.CryptoAlgo != AlgoSM4 && rec.conf.CryptoAlgo != "" {
-		return errors.New("加密算法无效")
-	}
-	if rec.conf.CryptoAlgo == AlgoAES && len(rec.conf.CryptoSecret) != 32 {
-		return errors.New("AES加密需要32位密钥(AES 256)")
-	}
-	if rec.conf.CryptoAlgo == AlgoSM4 && len(rec.conf.CryptoSecret) != 16 {
-		return errors.New("SM4加密需要16位密钥(SM4 128)")
+	if rec.conf.CryptoAlgo != "" { // 加密算法密码强度校验
+		switch rec.conf.CryptoAlgo {
+		case AlgoAES:
+			if len(rec.conf.CryptoSecret) != 32 {
+				return errors.New("AES加密需要32位密钥(AES 256)")
+			}
+		case AlgoSM4:
+			if len(rec.conf.CryptoSecret) != 16 {
+				return errors.New("SM4加密需要16位密钥(SM4 128)")
+			}
+		default:
+			return errors.New("不支持的加密算法")
+		}
 	}
 	// 签发参数校验
-	if params.UserID == "" || params.Duration == 0 || params.Subject == "" || params.Audience == nil {
+	if params.UserID == "" || params.Duration <= 0 || params.Subject == "" || params.Audience == nil {
 		return errors.New("签发基础参数错误")
 	}
-	// 默认值处理
-	rec.defaultParams(params)
 	return
 }
 func (rec *issuer) defaultParams(params *IssueParams) {
@@ -78,14 +83,14 @@ func (rec *issuer) defaultParams(params *IssueParams) {
 	if params.NotBefore.IsZero() {
 		params.NotBefore = time.Now()
 	}
-	if params.Issuer == "" {
-		params.Issuer = "jwt.iss"
-	}
+	// if params.Issuer == "" {
+	// 	params.Issuer = "jwt.iss"
+	// }
 }
 
 // encrypt 签发数据加密
 func (rec *issuer) encrypt(params *IssueParams) (err error) {
-	if rec.conf.CryptoAlgo == AlgoAES {
+	if rec.conf.CryptoAlgo == AlgoAES { // AES 256 CBC 加密
 		if params.UserID != "" {
 			if params.UserID, err = aes_crypto.EncryptCBC(params.UserID, rec.conf.CryptoSecret); err != nil {
 				return
@@ -97,7 +102,7 @@ func (rec *issuer) encrypt(params *IssueParams) (err error) {
 			}
 		}
 	}
-	if rec.conf.CryptoAlgo == AlgoSM4 {
+	if rec.conf.CryptoAlgo == AlgoSM4 { // SM4 128 CBC 加密
 		if params.UserID != "" {
 			if params.UserID, err = gm_crypto.SM4Encrypt("CBC", rec.conf.CryptoSecret, params.UserID, false); err != nil {
 				return
@@ -109,7 +114,6 @@ func (rec *issuer) encrypt(params *IssueParams) (err error) {
 			}
 		}
 	}
-	params.encrypted = params.UserID != "" || params.Ext != ""
 	return
 }
 
@@ -119,18 +123,18 @@ func (rec *issuer) Publish(params *IssueParams) (token, jwtID string, err error)
 	if err = rec.check(params); err != nil {
 		return
 	}
+	// 默认值处理
+	rec.defaultParams(params)
 	// 数据加密
 	if rec.conf.CryptoAlgo != "" {
 		if err = rec.encrypt(params); err != nil {
 			return
 		}
 	}
-	// 构造JWT详细信息
-
+	// 构造JWT
 	claims := TokenClaims{
 		params.UserID,
 		params.Ext,
-		params.encrypted,
 		rec.conf.CryptoAlgo,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(params.Duration)),
