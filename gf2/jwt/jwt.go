@@ -38,7 +38,7 @@ func (rec *jwtHelper) StandardAuth(r *ghttp.Request, p StandardAuthParams) (user
 	aud = p.Params.Audience
 	r.SetCtxVar("JWT_USER_ID", userID)
 	r.SetCtxVar("JWT_USER_JTI", c.ID)
-	r.SetCtxVar("JWT_USER_AUD", p.Params.Audience)
+	r.SetCtxVar("JWT_USER_AUD", aud)
 	return
 }
 
