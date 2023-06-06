@@ -157,7 +157,7 @@ func (rec *parser) Validate(params ValidateParams) (res *TokenClaims, err error)
 	return claims, nil
 }
 
-// ParseRaw 解析原始token数据，只验签，不核验（外部token可能格式和核验规则和本库不兼容，导致Validate无法正常处理，验签解析原始数据map后自行处理）
+// ParseRaw 解析原始token数据，只验签，不核验（外部token可能格式或核验规则与本库不兼容，导致Validate无法正常处理，验签解析原始数据map后自行处理）
 func (rec *parser) ParseRaw(tokenB string) (res jwt.MapClaims, err error) {
 	tokenStr, err := rec.tokenFormat(tokenB) // token格式化校验
 	if err != nil {
