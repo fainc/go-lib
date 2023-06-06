@@ -21,7 +21,7 @@ type ParserConf struct {
 	JwtAlgo      string           `dc:"* 验证JWT签名算法，支持ES256(默认)和HS256"`
 	JwtPublic    *ecdsa.PublicKey `dc:"*(根据算法二选一) jwt验签私钥证书，根据签名算法选择，ES256应传公钥验签"`
 	JwtSecret    string           `dc:"*(根据算法二选一) jwt验签密钥，根据签名算法选择，HS256应传密钥验签"`
-	CryptoSecret string           `dc:"可选，解密密钥（AES 256或SM4 128位密钥），解密字段：UserID Ext（程序根据JWT声明加密类型判断解密算法，应指定对应算法密钥）"`
+	CryptoSecret string           `dc:"可选，解密密钥（AES 256或SM4 128位密钥），不传则不进行内部解密，解密字段：UserID Ext（程序根据JWT声明加密类型判断解密算法，应指定对应算法密钥）"`
 }
 
 func Parser(conf ParserConf) *parser {
@@ -149,7 +149,7 @@ func (rec *parser) Validate(params ValidateParams) (res *TokenClaims, err error)
 			return nil, err
 		}
 	}
-	if claims.CryptoAlgo != "" {
+	if claims.CryptoAlgo != "" && rec.conf.CryptoSecret != "" {
 		if err = rec.decrypt(claims); err != nil {
 			return nil, err
 		}
