@@ -29,9 +29,9 @@ func Parser(conf ParserConf) *parser {
 }
 
 type ValidateParams struct {
+	Subject   string        `json:"subject" dc:"* jwt主题键"`
 	Token     string        `json:"token" dc:"* 待验证token 需要Bearer标识符"`
-	Audience  string        `json:"audience" dc:"* 验证作用域，传入的值需在颁发时定义的授权作用域列表内"`
-	Subject   string        `json:"subject" dc:"可选，可选，jwt主题键，如传递则严格验证，不传递则不验证"`
+	Audience  string        `json:"audience" dc:"可选，验证作用域，传入的值需在颁发时定义的授权作用域列表内，如传递则严格验证，不传递则不验证"`
 	Issuer    string        `json:"issuer" dc:"可选，签发者标记（可用于分布式签发端标记等），如传递则严格验证，不传递则不验证"`
 	Leeway    time.Duration `json:"leeway" dc:"可选，时间(exp、nbf)验证窗口期，一般用于token外部续期维护或跨系统时间同步宽容"`
 	LeewayNbf bool          `json:"leewayNbf" dc:"可选，时间验证窗口期是否适用于nbf，Leeway用于token外部续期维护等情况时建议否，仅用于时间同步宽容时允许是"`
@@ -59,9 +59,9 @@ func (rec *parser) verifyLifeCycle(token *jwt.Token, lifeCycle time.Duration) (e
 	return
 }
 func (rec *parser) validateOptions(params ValidateParams) (opts []jwt.ParserOption) {
-	opts = append(opts, jwt.WithAudience(params.Audience))
-	if params.Subject != "" {
-		opts = append(opts, jwt.WithSubject(params.Subject))
+	opts = append(opts, jwt.WithSubject(params.Subject))
+	if params.Audience != "" {
+		opts = append(opts, jwt.WithAudience(params.Audience))
 	}
 	if params.Issuer != "" {
 		opts = append(opts, jwt.WithIssuer(params.Issuer))
@@ -121,8 +121,8 @@ func (rec *parser) decrypt(claims *TokenClaims) (err error) {
 
 // Validate 核验JWT
 func (rec *parser) Validate(params ValidateParams) (res *TokenClaims, err error) {
-	if params.Audience == "" {
-		return nil, errors.New("audience invalid")
+	if params.Subject == "" {
+		return nil, errors.New("subject invalid")
 	}
 	tokenStr, err := rec.tokenFormat(params.Token) // token格式化校验
 	if err != nil {
@@ -153,6 +153,25 @@ func (rec *parser) Validate(params ValidateParams) (res *TokenClaims, err error)
 		if err = rec.decrypt(claims); err != nil {
 			return nil, err
 		}
+	}
+	return claims, nil
+}
+
+// ParseRaw 解析原始token数据，只验签，不核验，适用于跨系统对接token核验（外部token可能格式和本库不兼容，验签解析原始数据map后自行处理）
+func (rec *parser) ParseRaw(tokenB string) (res jwt.MapClaims, err error) {
+	tokenStr, err := rec.tokenFormat(tokenB) // token格式化校验
+	if err != nil {
+		return
+	}
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return rec.keyHandle(token) // 签名算法核验、密钥处理
+	})
+	if err != nil {
+		return
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("token invalid")
 	}
 	return claims, nil
 }

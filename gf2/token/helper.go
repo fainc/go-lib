@@ -3,6 +3,7 @@ package token
 import (
 	"context"
 	"crypto/ecdsa"
+	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
@@ -22,15 +23,42 @@ func Helper() *helper {
 
 type AuthJwtParams struct {
 	Algo         string
-	Audience     string
+	Aud          string
 	WhiteTables  g.SliceStr
 	Secret       string
 	PublicKey    *ecdsa.PublicKey
 	CryptoSecret string
 }
+type PublishJwtParams struct {
+	Algo         string
+	Aud          []string
+	UserID       int64
+	Secret       string
+	PrivateKey   *ecdsa.PrivateKey
+	CryptoAlgo   string
+	CryptoSecret string
+}
 
-// AuthJwtStateless  无状态通用jwt验证和ctx写入(可直接使用或作为示例自行开发),通过err和catchErr判断拦截
-func (rec *helper) AuthJwtStateless(r *ghttp.Request, p AuthJwtParams) (userID int64, aud string, catchErr bool, err error) {
+// PublishAuthToken 发布auth token(可直接使用或作为示例自行开发)
+func (rec *helper) PublishAuthToken(p PublishJwtParams) (token, jti string, err error) {
+	token, jti, err = jwt.Issuer(jwt.IssuerConf{
+		JwtAlgo:      p.Algo,
+		JwtPrivate:   p.PrivateKey,
+		JwtSecret:    p.Secret,
+		CryptoAlgo:   p.CryptoAlgo,
+		CryptoSecret: p.CryptoSecret,
+	}).Publish(&jwt.IssueParams{
+		Subject:  "Auth",
+		UserID:   gconv.String(p.UserID),
+		Duration: 7 * 24 * time.Hour, // 授权24小时
+		Audience: p.Aud,
+		Ext:      "",
+	})
+	return
+}
+
+// StatelessAuth  用户无状态通用jwt验证和ctx写入(可直接使用或作为示例自行开发),通过err和catchErr判断拦截
+func (rec *helper) StatelessAuth(r *ghttp.Request, p AuthJwtParams) (userID int64, aud string, catchErr bool, err error) {
 	c, err := jwt.Parser(jwt.ParserConf{
 		JwtAlgo:      p.Algo,
 		JwtSecret:    p.Secret,
@@ -38,7 +66,8 @@ func (rec *helper) AuthJwtStateless(r *ghttp.Request, p AuthJwtParams) (userID i
 		JwtPublic:    p.PublicKey,
 	}).Validate(jwt.ValidateParams{
 		Token:    r.GetHeader("Authorization"),
-		Audience: p.Audience,
+		Subject:  "Auth", // 需要确保颁发时的subject = Auth才能通过验证，详见 Publish Auth 参数
+		Audience: p.Aud,
 	})
 	if err != nil {
 		catchErr = true
@@ -51,7 +80,7 @@ func (rec *helper) AuthJwtStateless(r *ghttp.Request, p AuthJwtParams) (userID i
 		return
 	}
 	userID = gconv.Int64(c.UserID)
-	aud = p.Audience
+	aud = p.Aud
 	r.SetCtxVar("TOKEN_UID", userID)
 	r.SetCtxVar("TOKEN_JTI", c.ID)
 	r.SetCtxVar("TOKEN_AUD", aud)

@@ -31,10 +31,10 @@ func Issuer(conf IssuerConf) *issuer {
 }
 
 type IssueParams struct {
-	Subject   string        `json:"subject"`          // * jwt主题键，如：Auth 用户验证 , Access 临时权限验证等
+	Subject   string        `json:"subject"`          // * jwt主题键，如：UserAuth 用户验证 , Access 临时权限验证等
 	UserID    string        `json:"userID"`           // * 用户编码
-	Audience  []string      `json:"audience"`         // * 授权作用域列表
 	Duration  time.Duration `json:"duration"`         // * 授权时长
+	Audience  []string      `json:"audience"`         // 可选，授权作用域列表，验证时可判断授权是否在颁发列表内
 	NotBefore time.Time     `json:"notBefore"`        // 可选，启用时间
 	Ext       string        `json:"ext,omitempty"`    // 可选，额外用户信息，例如邮箱、昵称等，不建议存储用户敏感数据，如存储敏感数据请传加密密钥进行加密。
 	JwtID     string        `json:"jwtID,omitempty"`  // 可选，自定义 jti，不传使用随机uuid
@@ -71,7 +71,7 @@ func (rec *issuer) check(params *IssueParams) (err error) {
 		}
 	}
 	// 签发参数校验
-	if params.UserID == "" || params.Duration <= 0 || params.Subject == "" || params.Audience == nil {
+	if params.UserID == "" || params.Duration <= 0 || params.Subject == "" {
 		return errors.New("签发基础参数错误")
 	}
 	return

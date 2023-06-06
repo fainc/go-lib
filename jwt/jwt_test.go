@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
+
 	"github.com/fainc/go-lib/crypto/ecdsa_crypto"
 )
 
@@ -53,4 +56,16 @@ func TestIssue(_ *testing.T) {
 		return
 	}
 	fmt.Println(validate)
+}
+
+func TestName(t *testing.T) {
+	validate, err := Parser(ParserConf{
+		JwtAlgo:   AlgoHS256,
+		JwtSecret: "fjycsp2023",
+	}).ParseRaw("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoxLCJzY29wZSI6Im1hbmFnZXIiLCJpc3MiOiJqd3RIZWxwZXIiLCJleHAiOjE2ODYxMTMzMjcsIm5iZiI6MTY4NjAyNjkyNywiaWF0IjoxNjg2MDI2OTI3fQ.vhMSBTgRqmB__cwjg6T9eX2FCPRUx4TKPPPwm2WdJ-k")
+	if err != nil {
+		g.Dump(err.Error())
+		return
+	}
+	g.Dump(gconv.Time(validate["exp"]).String())
 }
