@@ -28,4 +28,4 @@ temp/
 /main.go
 /Makefile
 /logs/
-/test/redis_init.go
+/test/redis_conf.go
