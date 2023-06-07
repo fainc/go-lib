@@ -36,9 +36,6 @@ var jwtSecret string
 
 func init() {
 	jwtSecret = g.Cfg().MustGet(context.Background(), "jwt.secret").String()
-	if jwtSecret == "" {
-		panic("JWT签名密钥无效")
-	}
 }
 
 // Publish 发布HS256 NO CRYPTO auth token(可直接使用或作为示例自行开发)
