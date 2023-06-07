@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/fainc/go-lib/gf2/jwt"
+	"github.com/fainc/go-lib/gf2/token"
 )
 
 var limit int64
@@ -71,7 +71,7 @@ func Logger(r *ghttp.Request) {
 			k := gconv.String(key)
 			ext.Set(k, r.GetHeader(k))
 		}
-		jwtUser := jwt.Helper.GetCtxUser(r.Context())
+		jwtUser := token.Helper().GetCtxUser(r.Context())
 		logData := g.Map{"jwtUser": jwtUser, "headerExt": ext, "remoteAddr": r.Request.RemoteAddr, "referer": referer, "traceId": traceId, "method": r.Response.Request.Method, "code": r.Response.Status, "uri": r.Request.RequestURI, "contentType": ct, "UA": ua, "body": bd, "ip": cip, "time": ets, "runTime": rt, "buffer": buffer}
 		g.Log().Async().Header(false).Path(serviceLogPath).Stdout(logStdout).Print(context.Background(), logData)
 	}

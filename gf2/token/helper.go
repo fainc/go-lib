@@ -57,6 +57,25 @@ func (rec *helper) PublishAuthToken(p PublishJwtParams) (token, jti string, err 
 	return
 }
 
+// RevokeAuthToken redis黑名单实现 吊销用户jwt(可直接使用或作为示例自行开发)
+func (rec *helper) RevokeAuthToken(jti string) (err error) {
+	return
+}
+
+// IsRevokedAuthToken redis黑名单实现 校验是否吊销的用户jwt(可直接使用或作为示例自行开发)
+func (rec *helper) IsRevokedAuthToken(jti string) (is bool, err error) {
+	// rdb, err := redis.GetClient()
+	// if err != nil {
+	// 	return
+	// }
+	// ret, err := rdb.Exists(context.Background(), "jwt_b_"+jti).Result()
+	// if err != nil && !redis.NilError(err) {
+	// 	return
+	// }
+	// return ret > 0, nil
+	return
+}
+
 // StatelessAuth  用户无状态通用jwt验证和ctx写入(可直接使用或作为示例自行开发),通过err和catchErr判断拦截
 func (rec *helper) StatelessAuth(r *ghttp.Request, p AuthJwtParams) (userID int64, aud string, catchErr bool, err error) {
 	c, err := jwt.Parser(jwt.ParserConf{
@@ -84,6 +103,7 @@ func (rec *helper) StatelessAuth(r *ghttp.Request, p AuthJwtParams) (userID int6
 	r.SetCtxVar("TOKEN_UID", userID)
 	r.SetCtxVar("TOKEN_JTI", c.ID)
 	r.SetCtxVar("TOKEN_AUD", aud)
+	r.SetCtxVar("TOKEN_EXP", c.ExpiresAt)
 	return
 }
 
@@ -91,14 +111,19 @@ type CtxJwtUser struct {
 	ID      int64
 	TokenID string
 	Aud     string
+	Exp     time.Time
 }
 
 // GetCtxUser 获取CTX用户ID信息
 func (*helper) GetCtxUser(ctx context.Context) CtxJwtUser {
 	r := g.RequestFromCtx(ctx)
+	if r == nil {
+		return CtxJwtUser{}
+	}
 	return CtxJwtUser{
-		ID:      r.GetCtxVar("TOKEN_UID", 0).Int64(),
-		TokenID: r.GetCtxVar("TOKEN_JTI", "").String(),
-		Aud:     r.GetCtxVar("TOKEN_AUD", "").String(),
+		ID:      r.GetCtxVar("TOKEN_UID").Int64(),
+		TokenID: r.GetCtxVar("TOKEN_JTI").String(),
+		Aud:     r.GetCtxVar("TOKEN_AUD").String(),
+		Exp:     r.GetCtxVar("TOKEN_EXP").Time(),
 	}
 }
