@@ -30,18 +30,7 @@ func (rec *sat) getSatToken() (token string, err error) {
 	}
 	defer rec.sdk.SatRwLock.RUnlock()
 	rec.sdk.SatRwLock.RLock()
-	switch Cache().GetEngine() {
-	case "redis":
-		token, err = Cache().GetRedisCache("sat", rec.sdk.AppId)
-		if err != nil {
-			return
-		}
-	default:
-		token, err = Cache().GetMemoryCache("sat", rec.sdk.AppId)
-		if err != nil {
-			return
-		}
-	}
+	token, err = Cache().GetCache("sat", rec.sdk.AppId)
 	return
 }
 
@@ -57,17 +46,6 @@ func (rec *sat) Refresh() (token string, err error) {
 		return
 	}
 	token = s.AccessToken
-	switch Cache().GetEngine() {
-	case "redis":
-		err = Cache().SetRedisCache("sat", rec.sdk.AppId, token, s.ExpiresIn)
-		if err != nil {
-			return
-		}
-	default:
-		err = Cache().SetMemoryCache("sat", rec.sdk.AppId, token, s.ExpiresIn)
-		if err != nil {
-			return
-		}
-	}
+	err = Cache().SetCache("sat", rec.sdk.AppId, token, s.ExpiresIn)
 	return
 }

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type request struct{}
@@ -80,7 +80,7 @@ func (rec *request) PostAndDownloadCode(url string, data interface{}, res interf
 	respBody, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(respBody, &res)
 	if err != nil {
-		err = ioutil.WriteFile(downloadPath, respBody, 0755)
+		err = os.WriteFile(downloadPath, respBody, 0600)
 		if err != nil {
 			fmt.Println("PostAndDownloadCode 文件写入错误：" + err.Error())
 			err = errors.New("文件保存失败，请检查保存路径及读写权限")
@@ -105,7 +105,7 @@ func (rec *request) GetDownload(url string, downloadPath string) (err error) {
 		return
 	}
 	respBody, _ := io.ReadAll(resp.Body)
-	err = ioutil.WriteFile(downloadPath, respBody, 0755)
+	err = os.WriteFile(downloadPath, respBody, 0600)
 	if err != nil {
 		fmt.Println("GetAndDownload 文件写入错误：" + err.Error())
 		err = errors.New("文件保存失败，请检查保存路径及读写权限")

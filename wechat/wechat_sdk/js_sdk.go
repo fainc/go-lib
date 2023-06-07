@@ -15,46 +15,35 @@ type jsSdk struct {
 	sdk *SdkClient
 }
 
-func JsSdk(appId, secret string) *jsSdk {
+func JsSdk(appID, secret string) *jsSdk {
 	sdk, _ := Client().New(SdkClient{
-		AppId:  appId,
+		AppId:  appID,
 		Secret: secret,
 	})
 	return &jsSdk{sdk: sdk}
 }
 
-func (rec *jsSdk) GetJsApiTicket() (ticket string, err error) {
-	ticket, err = rec.getJsApiTicket()
+func (rec *jsSdk) GetJsAPITicket() (ticket string, err error) {
+	ticket, err = rec.getJsAPITicket()
 	if err != nil {
 		return
 	}
 	if ticket == "" {
-		ticket, err = rec.RefreshJsApiTicket()
+		ticket, err = rec.RefreshJsAPITicket()
 		return
 	}
 	return
 }
-func (rec *jsSdk) getJsApiTicket() (jat string, err error) {
+func (rec *jsSdk) getJsAPITicket() (jat string, err error) {
 	if rec.sdk.JatRwLock == nil {
 		rec.sdk.JatRwLock = new(sync.RWMutex)
 	}
 	defer rec.sdk.JatRwLock.RUnlock()
 	rec.sdk.JatRwLock.RLock()
-	switch Cache().GetEngine() {
-	case "redis":
-		jat, err = Cache().GetRedisCache("jat", rec.sdk.AppId)
-		if err != nil {
-			return
-		}
-	default:
-		jat, err = Cache().GetMemoryCache("jat", rec.sdk.AppId)
-		if err != nil {
-			return
-		}
-	}
+	jat, err = Cache().GetCache("jat", rec.sdk.AppId)
 	return
 }
-func (rec *jsSdk) RefreshJsApiTicket() (jat string, err error) {
+func (rec *jsSdk) RefreshJsAPITicket() (jat string, err error) {
 	if rec.sdk.JatRwLock == nil {
 		rec.sdk.JatRwLock = new(sync.RWMutex)
 	}
@@ -69,35 +58,24 @@ func (rec *jsSdk) RefreshJsApiTicket() (jat string, err error) {
 		return
 	}
 	jat = ticket.Ticket
-	switch Cache().GetEngine() {
-	case "redis":
-		err = Cache().SetRedisCache("jat", rec.sdk.AppId, jat, ticket.ExpiresIn)
-		if err != nil {
-			return
-		}
-	default:
-		err = Cache().SetMemoryCache("jat", rec.sdk.AppId, jat, ticket.ExpiresIn)
-		if err != nil {
-			return
-		}
-	}
+	err = Cache().SetCache("jat", rec.sdk.AppId, jat, ticket.ExpiresIn)
 	return
 }
 
-type JsApiConfigResp struct {
-	AppId     string `json:"appId"`
+type JsAPIConfigResp struct {
+	AppID     string `json:"appId"`
 	Timestamp string `json:"timestamp"`
 	NonceStr  string `json:"nonceStr"`
 	Signature string `json:"signature"`
 }
 
-func (rec *jsSdk) GetJsApiConfig(url string) (res *JsApiConfigResp, err error) {
-	ticket, err := JsSdk(rec.sdk.AppId, rec.sdk.AppId).GetJsApiTicket()
+func (rec *jsSdk) GetJsAPIConfig(url string) (res *JsAPIConfigResp, err error) {
+	ticket, err := JsSdk(rec.sdk.AppId, rec.sdk.AppId).GetJsAPITicket()
 	if err != nil {
 		return
 	}
-	res = &JsApiConfigResp{
-		AppId:     rec.sdk.AppId,
+	res = &JsAPIConfigResp{
+		AppID:     rec.sdk.AppId,
 		Timestamp: strconv.FormatInt(time.Now().Unix(), 10),
 		NonceStr:  str_helper.NonceStr(),
 	}

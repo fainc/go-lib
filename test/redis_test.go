@@ -45,7 +45,7 @@ func TestSingleton_Operator2(t *testing.T) {
 		fmt.Println(err.Error())
 		return
 	}
-	val, err := redis.Operator(cl).GetIntValue("key")
+	val, err := redis.NewOperator(cl).GetIntValue("key")
 	if err != nil {
 		fmt.Println(err.Error())
 		return

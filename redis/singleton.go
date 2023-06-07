@@ -54,10 +54,10 @@ func (rec *singleton) GetClient() (client *goRedis.Client, err error) {
 }
 
 // GetOperator 获取 redis 封装操作实例
-func (rec *singleton) GetOperator() (client *operator, err error) {
+func (rec *singleton) GetOperator() (client *Operator, err error) {
 	d, err := rec.GetClient()
 	if err != nil {
 		return
 	}
-	return Operator(d), nil
+	return NewOperator(d), nil
 }

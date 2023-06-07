@@ -8,26 +8,26 @@ import (
 	goRedis "github.com/redis/go-redis/v9"
 )
 
-type operator struct {
+type Operator struct {
 	rdb *goRedis.Client
 }
 
-// Operator redis操作封装，通过封装操作不需要判断err is nil,空数据返回默认值
-func Operator(rdb *goRedis.Client) *operator {
+// NewOperator redis操作封装，通过封装操作不需要判断err is nil,空数据返回默认值
+func NewOperator(rdb *goRedis.Client) *Operator {
 	if rdb == nil {
 		panic("redis operator: rdb is nil")
 	}
-	return &operator{rdb}
+	return &Operator{rdb}
 }
 
-func (rec *operator) GetStringValue(key string) (value string, err error) {
+func (rec *Operator) GetStringValue(key string) (value string, err error) {
 	value, rdbErr := rec.rdb.Get(context.Background(), key).Result()
 	if rdbErr != nil && !NilError(rdbErr) {
 		return "", rdbErr
 	}
 	return
 }
-func (rec *operator) SetValue(key string, value interface{}, expire time.Duration) (err error) {
+func (rec *Operator) SetValue(key string, value interface{}, expire time.Duration) (err error) {
 	ret := rec.rdb.Set(context.Background(), key, value, expire)
 	if ret.Err() != nil {
 		return ret.Err()
@@ -37,7 +37,7 @@ func (rec *operator) SetValue(key string, value interface{}, expire time.Duratio
 	}
 	return
 }
-func (rec *operator) DelKey(key string) (n int64, err error) {
+func (rec *Operator) DelKey(key string) (n int64, err error) {
 	ret := rec.rdb.Del(context.Background(), key)
 	if ret.Err() != nil {
 		err = ret.Err()
@@ -46,7 +46,7 @@ func (rec *operator) DelKey(key string) (n int64, err error) {
 	n = ret.Val()
 	return
 }
-func (rec *operator) GetIntValue(key string) (value int64, err error) {
+func (rec *Operator) GetIntValue(key string) (value int64, err error) {
 	value, rdbErr := rec.rdb.Get(context.Background(), key).Int64()
 	if rdbErr != nil && !NilError(rdbErr) {
 		err = rdbErr
