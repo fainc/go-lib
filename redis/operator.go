@@ -46,19 +46,6 @@ func (rec *operator) DelKey(key string) (n int64, err error) {
 	n = ret.Val()
 	return
 }
-func (rec *operator) Renew(key string, expire time.Duration) (n bool, err error) {
-	s := rec.rdb.TTL(context.Background(), key).Val()
-	if s.Seconds() <= 0 {
-		return
-	}
-	ret := rec.rdb.Expire(context.Background(), key, expire+s)
-	if ret.Err() != nil {
-		err = ret.Err()
-		return
-	}
-	n = ret.Val()
-	return
-}
 func (rec *operator) GetIntValue(key string) (value int64, err error) {
 	value, rdbErr := rec.rdb.Get(context.Background(), key).Int64()
 	if rdbErr != nil && !NilError(rdbErr) {
