@@ -2,7 +2,7 @@ package token
 
 import (
 	"context"
-	"crypto/ecdsa"
+	"errors"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -21,71 +21,45 @@ func Helper() *helper {
 	return &helperVar
 }
 
-type AuthJwtParams struct {
-	Algo         string
-	Aud          string
-	WhiteTables  g.SliceStr
-	Secret       string
-	PublicKey    *ecdsa.PublicKey
-	CryptoSecret string
+type AuthParams struct {
+	Aud         string
+	WhiteTables g.SliceStr
+	RevokeAuth  bool
 }
-type PublishJwtParams struct {
-	Algo         string
-	Aud          []string
-	UserID       int64
-	Secret       string
-	PrivateKey   *ecdsa.PrivateKey
-	CryptoAlgo   string
-	CryptoSecret string
+type PublishParams struct {
+	Aud      []string
+	UserID   int64
+	Duration time.Duration
 }
 
-// PublishAuthToken 发布auth token(可直接使用或作为示例自行开发)
-func (rec *helper) PublishAuthToken(p PublishJwtParams) (token, jti string, err error) {
+var jwtSecret string
+
+func init() {
+	jwtSecret = g.Cfg().MustGet(context.Background(), "jwt.secret").String()
+}
+
+// Publish 发布HS256 NO CRYPTO auth token(可直接使用或作为示例自行开发)
+func (rec *helper) Publish(p PublishParams) (token, jti string, err error) {
 	token, jti, err = jwt.Issuer(jwt.IssuerConf{
-		JwtAlgo:      p.Algo,
-		JwtPrivate:   p.PrivateKey,
-		JwtSecret:    p.Secret,
-		CryptoAlgo:   p.CryptoAlgo,
-		CryptoSecret: p.CryptoSecret,
+		JwtAlgo:   jwt.AlgoHS256,
+		JwtSecret: jwtSecret,
 	}).Publish(&jwt.IssueParams{
 		Subject:  "Auth",
 		UserID:   gconv.String(p.UserID),
-		Duration: 7 * 24 * time.Hour, // 授权24小时
+		Duration: p.Duration,
 		Audience: p.Aud,
-		Ext:      "",
 	})
 	return
 }
 
-// RevokeAuthToken redis黑名单实现 吊销用户jwt(可直接使用或作为示例自行开发)
-func (rec *helper) RevokeAuthToken(jti string) (err error) {
-	return
-}
-
-// IsRevokedAuthToken redis黑名单实现 校验是否吊销的用户jwt(可直接使用或作为示例自行开发)
-func (rec *helper) IsRevokedAuthToken(jti string) (is bool, err error) {
-	// rdb, err := redis.GetClient()
-	// if err != nil {
-	// 	return
-	// }
-	// ret, err := rdb.Exists(context.Background(), "jwt_b_"+jti).Result()
-	// if err != nil && !redis.NilError(err) {
-	// 	return
-	// }
-	// return ret > 0, nil
-	return
-}
-
-// StatelessAuth  用户无状态通用jwt验证和ctx写入(可直接使用或作为示例自行开发),通过err和catchErr判断拦截
-func (rec *helper) StatelessAuth(r *ghttp.Request, p AuthJwtParams) (userID int64, aud string, catchErr bool, err error) {
+// Auth  HS256 NO CRYPTO auth 通用jwt验证和ctx写入(可直接使用或作为示例自行开发),通过err和catchErr判断拦截
+func (rec *helper) Auth(r *ghttp.Request, p AuthParams) (userID int64, aud string, catchErr bool, err error) {
 	c, err := jwt.Parser(jwt.ParserConf{
-		JwtAlgo:      p.Algo,
-		JwtSecret:    p.Secret,
-		CryptoSecret: p.CryptoSecret,
-		JwtPublic:    p.PublicKey,
+		JwtAlgo:   jwt.AlgoHS256,
+		JwtSecret: jwtSecret,
 	}).Validate(jwt.ValidateParams{
 		Token:    r.GetHeader("Authorization"),
-		Subject:  "Auth", // 需要确保颁发时的subject = Auth才能通过验证，详见 Publish Auth 参数
+		Subject:  "Auth",
 		Audience: p.Aud,
 	})
 	if err != nil {
@@ -97,6 +71,15 @@ func (rec *helper) StatelessAuth(r *ghttp.Request, p AuthJwtParams) (userID int6
 			}
 		}
 		return
+	}
+	if p.RevokeAuth {
+		var revoked bool
+		if revoked, err = jwt.RedisProtect().IsRevoked(c.ID); err != nil {
+			panic(err)
+		}
+		if revoked {
+			return 0, "", true, errors.New("当前登录凭证已被注销")
+		}
 	}
 	userID = gconv.Int64(c.UserID)
 	aud = p.Aud
