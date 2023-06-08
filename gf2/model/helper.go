@@ -43,12 +43,12 @@ func (rec *helper) Update() (rows int64, err error) {
 	return
 }
 
-func (rec *helper) Get(res *interface{}) (err error) {
+func (rec *helper) Get(res interface{}) (err error) {
 	err = rec.m.Scan(&res)
 	return
 }
 
-func (rec *helper) MustGet(res *interface{}) (err error) {
+func (rec *helper) MustGet(res interface{}) (err error) {
 	err = rec.Get(res)
 	if err != nil {
 		return
