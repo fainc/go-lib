@@ -2,6 +2,7 @@ package gmd
 
 //  gf2 model helper
 import (
+	"errors"
 	"math"
 
 	"github.com/gogf/gf/v2/database/gdb"
@@ -27,5 +28,15 @@ func (rec *helper) CountWithPage(pageSize int) (total int, page int, err error) 
 		return total, 1, nil
 	}
 	page = int(math.Ceil(float64(total) / float64(pageSize)))
+	return
+}
+func (rec *helper) MustGet(res interface{}) (err error) {
+	err = rec.m.Scan(&res)
+	if err != nil {
+		return
+	}
+	if res == nil {
+		return errors.New("the query data does not exist")
+	}
 	return
 }

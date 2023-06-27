@@ -46,7 +46,8 @@ func (rec *miniProgram) GetUserPhoneNumber(code string) (res *UserPhoneNumberRes
 }
 
 // DownloadWxACode 下载小程序码
-//  doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/getQRCode.html
+//
+//	doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/getQRCode.html
 func (rec *miniProgram) DownloadWxACode(params *WxACodeParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
 		return
@@ -63,7 +64,7 @@ func (rec *miniProgram) DownloadWxACode(params *WxACodeParams, downloadPath stri
 
 // DownloadWxACodeUnLimit 下载不限制的小程序码
 // doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/getUnlimitedQRCode.html
-func (rec *miniProgram) DownloadWxACodeUnLimit(params *WxACodeUnLimitParams, downloadPath string) (path string, err error) {
+func (rec *miniProgram) DownloadWxACodeUnLimit(params *WxACodeUnLimitParams, downloadPath string) (name string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
 		return
 	}
@@ -71,17 +72,18 @@ func (rec *miniProgram) DownloadWxACodeUnLimit(params *WxACodeUnLimitParams, dow
 		fmt.Println("DownloadWxACodeUnLimit 警告：checkPath为 false 时允许小程序未发布或者 page 不存在， 但page 有数量上限（60000个）请勿滥用。")
 	}
 	suffix := Utils().HyaLineSuffix(params.IsHyaLine)
-	path = downloadPath + "WxACodeUL_" + str_helper.NonceStr() + suffix
+	name = "WxACodeUL_" + str_helper.NonceStr() + suffix
 	token, err := Sat(rec.sdk).Get()
 	if err != nil {
 		return
 	}
-	err = Api().DownloadWxACodeUnLimit(token, params, path)
+	err = Api().DownloadWxACodeUnLimit(token, params, downloadPath+name)
 	return
 }
 
 // DownloadWxAQrCode 下载小程序二维码
-//  doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/createQRCode.html
+//
+//	doc : https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/qrcode-link/qr-code/createQRCode.html
 func (rec *miniProgram) DownloadWxAQrCode(params *WxAQrCodeParams, downloadPath string) (path string, err error) {
 	if err = Utils().DownloadPathCheck(downloadPath); err != nil {
 		return
