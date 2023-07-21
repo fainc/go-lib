@@ -71,7 +71,7 @@ func (rec *json) Writer(ctx context.Context, data interface{}, message string, c
 	r.Response.WriteStatus(code)
 	r.Response.ClearBuffer()
 	serverName, _ := os.Hostname()
-	serverId, _ := gmd5.Encrypt(serverName)
+	serverID, _ := gmd5.Encrypt(serverName)
 	r.Response.WriteJson(JsonFormat{
 		Code:      code,
 		Message:   message,
@@ -84,7 +84,7 @@ func (rec *json) Writer(ctx context.Context, data interface{}, message string, c
 		Algorithm: rec.EncryptAlgorithm,
 	})
 	r.Response.Header().Set("Content-Type", "application/json;charset=utf-8")
-	r.Response.Header().Set("Server-Id", serverId)
+	r.Response.Header().Set("Server-Id", serverID)
 	r.ExitAll()
 }
 
@@ -95,12 +95,12 @@ func (rec *json) CustomWriter(ctx context.Context, data interface{}, status ...i
 		statusCode = status[0]
 	}
 	serverName, _ := os.Hostname()
-	serverId, _ := gmd5.Encrypt(serverName)
+	serverID, _ := gmd5.Encrypt(serverName)
 	r := g.RequestFromCtx(ctx)
 	r.Response.WriteStatus(statusCode)
 	r.Response.ClearBuffer()
 	r.Response.WriteJson(data)
 	r.Response.Header().Set("Content-Type", "application/json;charset=utf-8")
-	r.Response.Header().Set("Server-Id", serverId)
+	r.Response.Header().Set("Server-Id", serverID)
 	r.ExitAll()
 }
