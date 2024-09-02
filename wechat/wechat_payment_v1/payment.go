@@ -55,7 +55,7 @@ type UnifiedOrderResp struct {
 
 // UnifiedOrder 支付统一下单接口
 func (rec *payment) UnifiedOrder(params *UnifiedOrderParams, newWpc ...*WechatPayClient) (resp *UnifiedOrderResp, err error) {
-	wc, err := Client().Which(newWpc)
+	wc, err := Client().Which(newWpc...)
 	if err != nil {
 		return
 	}
