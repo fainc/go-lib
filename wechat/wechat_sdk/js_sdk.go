@@ -70,7 +70,7 @@ type JsAPIConfigResp struct {
 }
 
 func (rec *jsSdk) GetJsAPIConfig(url string) (res *JsAPIConfigResp, err error) {
-	ticket, err := JsSdk(rec.sdk.AppId, rec.sdk.AppId).GetJsAPITicket()
+	ticket, err := JsSdk(rec.sdk.AppId, rec.sdk.Secret).GetJsAPITicket()
 	if err != nil {
 		return
 	}
