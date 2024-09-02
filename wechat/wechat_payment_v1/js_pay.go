@@ -25,7 +25,7 @@ type JsPayParams struct {
 
 // GetJsPay 获取JSAPI支付参数
 func (rec *jsPay) GetJsPay(params *UnifiedOrderResp, newWpc ...*WechatPayClient) (js *JsPayParams, err error) {
-	wc, err := Client().Which(newWpc...)
+	wc, err := Client().Which(newWpc)
 	if err != nil {
 		return
 	}
