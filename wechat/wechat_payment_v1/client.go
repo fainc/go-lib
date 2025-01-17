@@ -2,7 +2,6 @@ package wechat_payment_v1
 
 import (
 	"errors"
-	"reflect"
 )
 
 type client struct{}
@@ -54,7 +53,7 @@ func (rec *client) Get() (*WechatPayClient, error) {
 
 // Which 判断使用自定义client还是全局初始化client
 func (rec *client) Which(newWpc ...*WechatPayClient) (wc *WechatPayClient, err error) {
-	if len(newWpc) == 1 && newWpc[0] != nil && reflect.TypeOf(newWpc[0]) == reflect.TypeOf(wc) {
+	if len(newWpc) == 1 && newWpc[0] != nil {
 		return newWpc[0], nil
 	}
 	return rec.Get()
