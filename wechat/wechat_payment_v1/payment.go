@@ -86,3 +86,62 @@ func (rec *payment) UnifiedOrder(params *UnifiedOrderParams, newWpc ...*WechatPa
 	}
 	return
 }
+
+type RefundRequestParams struct {
+	OutTradeNo  string `json:"out_trade_no" xml:"out_trade_no"`   // * 商户订单号
+	OutRefundNo string `json:"out_refund_no" xml:"out_refund_no"` // * 商户退款单号
+	TotalFee    string `json:"total_fee" xml:"total_fee"`         // * 订单金额，按分表示
+	RefundFee   string `json:"refund_fee" xml:"refund_fee"`       // * 订单金额，按分表示
+}
+type refundRequestParams struct {
+	XMLName  xml.Name `xml:"xml" json:"-"`
+	Appid    string   `json:"appid" xml:"appid"`
+	MchId    string   `json:"mch_id" xml:"mch_id"`
+	NonceStr string   `json:"nonce_str" xml:"nonce_str"`
+	Sign     string   `json:"sign" xml:"sign"`
+	*RefundRequestParams
+}
+
+type RefundResp struct {
+	ReturnCode    string `json:"return_code"`
+	ReturnMsg     string `json:"return_msg"`
+	Appid         string `json:"appid"`
+	MchId         string `json:"mch_id"`
+	NonceStr      string `json:"nonce_str"`
+	Sign          string `json:"sign"`
+	ResultCode    string `json:"result_code"`
+	TransactionId string `json:"transaction_id"`
+	OutTradeNo    string `json:"out_trade_no"`
+	OutRefundNo   string `json:"out_refund_no"`
+	RefundId      string `json:"refund_id"`
+	RefundFee     string `json:"refund_fee"`
+}
+
+func (rec *payment) Refund(params *RefundRequestParams, newWpc ...*WechatPayClient) (resp *RefundResp, err error) {
+	wc, err := Client().Which(newWpc...)
+	if err != nil {
+		return
+	}
+	p := &refundRequestParams{
+		Appid:               wc.AppId,
+		MchId:               wc.MchId,
+		NonceStr:            Utils().GetNonceStr(),
+		RefundRequestParams: params,
+	}
+	paramsJson, _ := json.Marshal(p)
+	p.Sign = Utils().GetSign(paramsJson, wc.SecretKey)
+	respBody, err := Request().Send("https://api.mch.weixin.qq.com/secapi/pay/refund", p)
+	if err != nil {
+		return
+	}
+	resp = &RefundResp{}
+	err = xml.Unmarshal(respBody, resp)
+	if err != nil {
+		return
+	}
+	if resp.ResultCode != "SUCCESS" {
+		err = errors.New(resp.ReturnMsg)
+		return
+	}
+	return
+}
