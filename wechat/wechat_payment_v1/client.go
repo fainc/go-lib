@@ -1,6 +1,7 @@
 package wechat_payment_v1
 
 import (
+	"crypto/tls"
 	"errors"
 )
 
@@ -16,6 +17,7 @@ type WechatPayClient struct {
 	AppId     string
 	MchId     string
 	SecretKey string
+	Cert      *tls.Certificate
 }
 
 var wpc *WechatPayClient
@@ -26,6 +28,7 @@ func (rec *client) New(params *WechatPayClient) (*WechatPayClient, error) {
 		AppId:     params.AppId,
 		MchId:     params.MchId,
 		SecretKey: params.SecretKey,
+		Cert:      params.Cert,
 	}, nil
 }
 

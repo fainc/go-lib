@@ -1,6 +1,7 @@
 package wechat_payment_v1
 
 import (
+	"crypto/tls"
 	"encoding/xml"
 	"errors"
 	"io"
@@ -22,13 +23,16 @@ type commonResp struct {
 }
 
 // Send 请求方法
-func (rec *request) Send(url string, params interface{}) (respBody []byte, err error) {
+func (rec *request) Send(url string, params interface{}, tlsCert ...*tls.Certificate) (respBody []byte, err error) {
 	x, err := xml.Marshal(params)
 	if err != nil {
 		return
 	}
 	body := strings.NewReader(string(x))
 	hc := &http.Client{}
+	if len(tlsCert) == 1 && tlsCert[0] != nil {
+		hc.Transport = &http.Transport{TLSClientConfig: &tls.Config{Certificates: []tls.Certificate{*tlsCert[0]}}}
+	}
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return

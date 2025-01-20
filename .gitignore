@@ -29,3 +29,5 @@ temp/
 /Makefile
 /logs/
 /test/redis_conf.go
+/test/cert/
+/test/wechat_conf.go

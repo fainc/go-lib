@@ -88,10 +88,13 @@ func (rec *payment) UnifiedOrder(params *UnifiedOrderParams, newWpc ...*WechatPa
 }
 
 type RefundRequestParams struct {
-	OutTradeNo  string `json:"out_trade_no" xml:"out_trade_no"`   // * 商户订单号
-	OutRefundNo string `json:"out_refund_no" xml:"out_refund_no"` // * 商户退款单号
-	TotalFee    string `json:"total_fee" xml:"total_fee"`         // * 订单金额，按分表示
-	RefundFee   string `json:"refund_fee" xml:"refund_fee"`       // * 订单金额，按分表示
+	TransactionId string `json:"transaction_id,omitempty" xml:"transaction_id"`     // * 原微信支付订单号（二选一A）
+	OutTradeNo    string `json:"out_trade_no,omitempty" xml:"out_trade_no"`         // * 原商户订单号（二选一B）
+	OutRefundNo   string `json:"out_refund_no" xml:"out_refund_no"`                 // * 商户退款单号
+	TotalFee      string `json:"total_fee" xml:"total_fee"`                         // * 订单金额，按分表示
+	RefundFee     string `json:"refund_fee" xml:"refund_fee"`                       // * 退款金额，按分表示
+	RefundDesc    string `json:"refund_desc,omitempty" xml:"refund_desc,omitempty"` // 退款原因
+	NotifyUrl     string `json:"notify_url,omitempty" xml:"notify_url,omitempty"`   // 退款结果通知url
 }
 type refundRequestParams struct {
 	XMLName  xml.Name `xml:"xml" json:"-"`
@@ -103,18 +106,19 @@ type refundRequestParams struct {
 }
 
 type RefundResp struct {
-	ReturnCode    string `json:"return_code"`
-	ReturnMsg     string `json:"return_msg"`
-	Appid         string `json:"appid"`
-	MchId         string `json:"mch_id"`
-	NonceStr      string `json:"nonce_str"`
-	Sign          string `json:"sign"`
-	ResultCode    string `json:"result_code"`
-	TransactionId string `json:"transaction_id"`
-	OutTradeNo    string `json:"out_trade_no"`
-	OutRefundNo   string `json:"out_refund_no"`
-	RefundId      string `json:"refund_id"`
-	RefundFee     string `json:"refund_fee"`
+	ReturnCode    string `json:"return_code" xml:"return_code"`
+	ReturnMsg     string `json:"return_msg" xml:"return_msg"`
+	Appid         string `json:"appid" xml:"appid"`
+	MchId         string `json:"mch_id" xml:"mch_id"`
+	NonceStr      string `json:"nonce_str" xml:"nonce_str"`
+	Sign          string `json:"sign" xml:"sign"`
+	ResultCode    string `json:"result_code" xml:"result_code"`
+	ErrCodeDes    string `json:"err_code_des" xml:"err_code_des"`
+	TransactionId string `json:"transaction_id" xml:"transaction_id"`
+	OutTradeNo    string `json:"out_trade_no" xml:"out_trade_no"`
+	OutRefundNo   string `json:"out_refund_no" xml:"out_refund_no"`
+	RefundId      string `json:"refund_id" xml:"refund_id"`
+	RefundFee     string `json:"refund_fee" xml:"refund_fee"`
 }
 
 func (rec *payment) Refund(params *RefundRequestParams, newWpc ...*WechatPayClient) (resp *RefundResp, err error) {
@@ -130,7 +134,11 @@ func (rec *payment) Refund(params *RefundRequestParams, newWpc ...*WechatPayClie
 	}
 	paramsJson, _ := json.Marshal(p)
 	p.Sign = Utils().GetSign(paramsJson, wc.SecretKey)
-	respBody, err := Request().Send("https://api.mch.weixin.qq.com/secapi/pay/refund", p)
+	if wc.Cert == nil {
+		err = errors.New("wechat payment refund need cert")
+		return
+	}
+	respBody, err := Request().Send("https://api.mch.weixin.qq.com/secapi/pay/refund", p, wc.Cert)
 	if err != nil {
 		return
 	}
@@ -140,7 +148,7 @@ func (rec *payment) Refund(params *RefundRequestParams, newWpc ...*WechatPayClie
 		return
 	}
 	if resp.ResultCode != "SUCCESS" {
-		err = errors.New(resp.ReturnMsg)
+		err = errors.New(resp.ErrCodeDes)
 		return
 	}
 	return
