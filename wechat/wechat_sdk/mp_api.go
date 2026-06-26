@@ -12,13 +12,14 @@ func MpApi() *mpApi {
 	return &mpApiVar
 }
 
+type MpQrCodeParamsActionInfo struct {
+	SceneId  int    `json:"scene_id"`
+	SceneStr string `json:"scene_str"`
+}
 type MpQrCodeParams struct {
-	ExpireSeconds int    `json:"expire_seconds"`
-	ActionName    string `json:"action_name"`
-	ActionInfo    struct {
-		SceneId  int    `json:"scene_id"`
-		SceneStr string `json:"scene_str"`
-	} `json:"action_info"`
+	ExpireSeconds int                       `json:"expire_seconds"`
+	ActionName    string                    `json:"action_name"`
+	ActionInfo    *MpQrCodeParamsActionInfo `json:"action_info"`
 }
 type MpQrCodeRes struct {
 	WxCommonRes
