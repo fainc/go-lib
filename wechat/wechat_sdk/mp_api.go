@@ -12,9 +12,12 @@ func MpApi() *mpApi {
 	return &mpApiVar
 }
 
-type MpQrCodeParamsActionInfo struct {
+type MpQrCodeParamsActionInfoScene struct {
 	SceneId  int    `json:"scene_id"`
 	SceneStr string `json:"scene_str"`
+}
+type MpQrCodeParamsActionInfo struct {
+	Scene *MpQrCodeParamsActionInfoScene `json:"scene"`
 }
 type MpQrCodeParams struct {
 	ExpireSeconds int                       `json:"expire_seconds"`
