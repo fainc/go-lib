@@ -15,9 +15,10 @@ func MpApi() *mpApi {
 type MpQrCodeParams struct {
 	ExpireSeconds int    `json:"expire_seconds"`
 	ActionName    string `json:"action_name"`
-	ActionInfo    string `json:"action_info"`
-	SceneId       int    `json:"scene_id"`
-	SceneStr      string `json:"scene_str"`
+	ActionInfo    struct {
+		SceneId  int    `json:"scene_id"`
+		SceneStr string `json:"scene_str"`
+	} `json:"action_info"`
 }
 type MpQrCodeRes struct {
 	WxCommonRes
