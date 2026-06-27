@@ -18,8 +18,13 @@ type SatRes struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-// GetSat 小程序/公众号通用获取AccessToken方法
+// GetSat 小程序/公众号通用获取AccessToken方法，优先使用 GetStableSat，失败降级为默认 AccessToken
 func (rec *api) GetSat(sdk *SdkClient) (res *SatRes, err error) {
+	res, err = rec.GetStableSat(sdk)
+	if err == nil && res != nil {
+		// 获取成功直接返回，失败则降级为后续方法
+		return
+	}
 	url := "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + sdk.AppId + "&secret=" + sdk.Secret
 	err = Request().Get(url, &res)
 	if err != nil {
@@ -31,6 +36,36 @@ func (rec *api) GetSat(sdk *SdkClient) (res *SatRes, err error) {
 	}
 	if res.AccessToken == "" {
 		err = errors.New("获取Sat失败")
+		return
+	}
+	return
+}
+
+// GetStableSat 小程序/公众号通用获取Stable AccessToken方法,已更新为 https://developers.weixin.qq.com/miniprogram/dev/server/API/mp-access-token/api_getstableaccesstoken.html
+func (rec *api) GetStableSat(sdk *SdkClient) (res *SatRes, err error) {
+	url := "https://api.weixin.qq.com/cgi-bin/stable_token"
+	type stableTokenReqT struct {
+		GrantType    string `json:"grant_type"`
+		AppId        string `json:"appid"`
+		Secret       string `json:"secret"`
+		ForceRefresh bool   `json:"force_refresh"`
+	}
+	stableTokenReq := &stableTokenReqT{
+		GrantType:    "client_credential",
+		AppId:        sdk.AppId,
+		Secret:       sdk.Secret,
+		ForceRefresh: false,
+	}
+	err = Request().Post(url, stableTokenReq, &res)
+	if err != nil {
+		return
+	}
+	if res.ErrCode != 0 {
+		err = errors.New(res.ErrMsg)
+		return
+	}
+	if res.AccessToken == "" {
+		err = errors.New("获取Stable Sat失败")
 		return
 	}
 	return
